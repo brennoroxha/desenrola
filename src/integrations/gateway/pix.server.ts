@@ -394,6 +394,25 @@ async function getStatusKlivo(id: string): Promise<StatusResult> {
 
 // ---------- Dispatcher ----------
 export async function createPix(gateway: GatewayId, input: CreatePixInput): Promise<CreatePixResult> {
+  // Verificar se o IP está bloqueado
+  if (input.ip) {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data } = await supabaseAdmin
+        .from("desenrola_blocked_ips")
+        .select("ip")
+        .eq("ip", input.ip)
+        .maybeSingle();
+
+      if (data) {
+        console.log(`[security] PIX generation blocked for IP: ${input.ip}`);
+        return { ok: false, status: 403, message: "Ação bloqueada por segurança." };
+      }
+    } catch (err) {
+      console.error("[security] erro ao verificar ip", err);
+    }
+  }
+
   if (process.env.VITE_USE_MOCKS === "true") {
     console.log(`[mock] createPix via ${gateway} interceptado. Dados:`, input);
     return {
