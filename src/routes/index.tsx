@@ -78,6 +78,8 @@ function CpfPage() {
                 className="h-9 w-auto max-w-[132px] block object-contain"
                 width="100"
                 height="32"
+                loading="lazy"
+                decoding="async"
               />
             </span>
             <div className="flex items-center gap-0 shrink-0 ml-auto">
@@ -99,7 +101,7 @@ function CpfPage() {
           </header>
 
           <section className="relative bg-white mx-4 mt-3 mb-4 pt-5 pb-9 px-[18px] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-center">
-            <img className="max-w-[200px] max-h-24 w-full h-auto object-contain mx-auto mb-3.5 block" src={limpeNome.url} alt="Limpe seu nome" />
+            <img className="max-w-[200px] max-h-24 w-full h-auto object-contain mx-auto mb-3.5 block" src={limpeNome.url} alt="Limpe seu nome" loading="lazy" decoding="async" />
 
             <p className="text-sm text-cinza-texto leading-6 mb-5">
               ✅ ATUALIZADO - Informe seu CPF e clique em "Continuar" para<br />
@@ -151,7 +153,7 @@ function CpfPage() {
 
           <footer className="mt-auto bg-azul-footer text-white">
             <div className="max-w-[720px] mx-auto px-5 py-8 flex flex-col items-center text-center gap-4">
-              <img src={iconeFooter.url} alt="" className="h-10 w-auto" width="120" height="40" />
+              <img src={iconeFooter.url} alt="" className="h-10 w-auto" width="120" height="40" loading="lazy" decoding="async" />
               <div className="flex flex-col gap-1">
                 <p className="text-xs opacity-80">Todo o conteúdo deste site está publicado sob a licença</p>
                 <strong className="text-sm font-bold">Sistema de Renegociação — Todos os direitos reservados</strong>

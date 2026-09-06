@@ -5,12 +5,12 @@ import parabensAudio from "../assets/parabens.mp3";
 import pagamentoAudio from "../assets/pagamento.mp3";
 import avisoAudio from "../assets/aviso.mp3";
 
-import limpenome from "../assets/limpenome.png";
-import leticia from "../assets/leticiaatendente.png";
-import logorodape from "../assets/logorodape.png";
-import logocabecalho from "../assets/logocabecalho.png";
-import iniciochat from "../assets/iniciochat.png";
-import image2 from "../assets/image2.png";
+import limpenome from "../assets/limpenome.webp";
+import leticia from "../assets/leticiaatendente.webp";
+import logorodape from "../assets/logorodape.webp";
+import logocabecalho from "../assets/logocabecalho.webp";
+import iniciochat from "../assets/iniciochat.webp";
+import image2 from "../assets/image2.webp";
 // import logoamarelo from "../assets/logoamarelo.png"; // DESCOMENTE ASSIM QUE COLOCAR O ARQUIVO NA PASTA
 // import scoreImg from "../assets/score.jpg"; // DESCOMENTE ASSIM QUE COLOCAR O ARQUIVO NA PASTA
 
