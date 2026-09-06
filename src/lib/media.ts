@@ -26,24 +26,24 @@ export const mediaOpt = {
 } as const;
 
 export const media = {
-  desenrola: `${BASE}/desenrola.png`,
-  fundo: `${BASE}/fundo.png`,
-  heroInicio: image34Asset.url,
-  iconeFooter: logorodapeAsset.url,
-  iconeGov: "https://hxcjhkjqgcaaqmtkacnr.supabase.co/storage/v1/object/public/DESERNOLAR/logocabecalho.png",
-  image1: "https://hxcjhkjqgcaaqmtkacnr.supabase.co/storage/v1/object/public/DESERNOLAR/iniciochat.png",
-  image2: image36Asset.url,
-  leticia: leticiaAsset.url,
-  limpeNome: image33Asset.url,
-  limpeNomeCpf: limpenomeAsset.url,
-  logoAmarelo: `${BASE}/logoamarelo.png`,
-  score: scoreAsset.url,
-  video1: video1Asset.url,
+  desenrola: "/assets/desenrola.png",
+  fundo: "/assets/fundo.png",
+  heroInicio: "/assets/lula.png", // Imagem do Lula
+  iconeFooter: "/assets/logorodape.png",
+  iconeGov: "/assets/logocabecalho.png",
+  image1: "/assets/iniciochat.png",
+  image2: "/assets/marcas.png", // Imagem das marcas
+  leticia: "/assets/leticia.png", // Avatar da Letícia
+  limpeNome: "/assets/limpenome.png",
+  limpeNomeCpf: "/assets/limpenome.png",
+  logoAmarelo: "/assets/logoamarelo.png",
+  score: "/assets/score.jpg",
+  video1: "/assets/video.mp4", // O vídeo que você irá colocar
   audios: {
-    desktop: desktopAudioAsset.url,
-    aviso: avisoAudioAsset.url,
-    buscaacordo: buscaacordoAudioAsset.url,
-    pagamento: pagamentoAudioAsset.url,
-    parabens: parabensAudioAsset.url,
+    desktop: "/assets/desktop.mp3",
+    aviso: "/assets/aviso.mp3",
+    buscaacordo: "/assets/buscaacordo.mp3",
+    pagamento: "/assets/pagamento.mp3",
+    parabens: "/assets/parabens.mp3",
   },
 } as const;
