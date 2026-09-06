@@ -54,7 +54,7 @@ async function createPixFreepay(input: CreatePixInput): Promise<CreatePixResult>
       phone: `+55${input.phone}`,
       document: { number: input.cpf, type: "cpf" as const },
     },
-    items: [{ title: "Apostila Desenrolados", unit_price: input.amount_cents, quantity: 1, tangible: false, external_ref: input.acordo }],
+    items: [{ title: "KIT Celimax", unit_price: input.amount_cents, quantity: 1, tangible: false, external_ref: input.acordo }],
     pix: { expires_in_days: 1 },
     metadata: { acordo: input.acordo, provider_name: "Desenrola Brasil" },
     ip: input.ip,
@@ -116,7 +116,7 @@ async function createPixBlackcat(input: CreatePixInput): Promise<CreatePixResult
     amount: input.amount_cents,
     currency: "BRL",
     paymentMethod: "pix",
-    items: [{ title: "Apostila Desenrolados", unitPrice: input.amount_cents, quantity: 1, tangible: false }],
+    items: [{ title: "KIT Celimax", unitPrice: input.amount_cents, quantity: 1, tangible: false }],
     customer: {
       name: input.nome,
       email: input.email,

