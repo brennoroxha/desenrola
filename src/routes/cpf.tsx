@@ -6,7 +6,7 @@ import { track } from "@/lib/tracking";
 const iconeGov = { url: media.iconeGov };
 const limpeNome = { url: media.limpeNomeCpf };
 const iconeFooter = { url: media.iconeFooter };
-const logoLoading = { url: media.logoAmarelo };
+const logoLoading = { url: "https://descomplicandobrasil.online/__l5e/assets-v1/e561af93-0349-4968-8371-23354c09fabc/logo-loading.png" };
 
 export const Route = createFileRoute("/cpf")({
   component: CpfPage,
