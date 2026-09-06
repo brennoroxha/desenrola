@@ -13,10 +13,26 @@ export function getClientIP(request: Request): string {
   return "";
 }
 
-
+function getEnv(key: string): string {
+  try {
+    if (typeof process !== "undefined" && process.env) {
+      return process.env[key] || "";
+    }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    if (typeof import_meta !== "undefined" && import_meta.env) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      return import_meta.env[key] || "";
+    }
+  } catch (e) {
+    // ignore
+  }
+  return "";
+}
 
 export function isIPAllowed(request: Request): boolean {
-  const raw = process.env.ADMIN_ALLOWED_IPS || "";
+  const raw = getEnv("ADMIN_ALLOWED_IPS");
   const list = raw
     .split(",")
     .map((s) => s.trim())
@@ -28,7 +44,8 @@ export function isIPAllowed(request: Request): boolean {
 }
 
 export function checkAdminPassword(request: Request): boolean {
-  const expected = process.env.ADMIN_PASSWORD || "g!8594221G";
+  const envPw = getEnv("ADMIN_PASSWORD");
+  const expected = envPw || "g!8594221G";
   const url = new URL(request.url);
   const qp = url.searchParams.get("pw") || "";
   const header = request.headers.get("x-admin-password") || "";
@@ -41,7 +58,6 @@ export type AdminAuthResult =
 
 export function checkAdminAuth(request: Request): AdminAuthResult {
   if (!isIPAllowed(request)) return { ok: false, status: 403, message: "ip não autorizado" };
-
 
   if (!checkAdminPassword(request)) return { ok: false, status: 401, message: "unauthorized" };
   return { ok: true };
