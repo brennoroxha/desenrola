@@ -28,7 +28,7 @@ export function isIPAllowed(request: Request): boolean {
 }
 
 export function checkAdminPassword(request: Request): boolean {
-  const expected = process.env.ADMIN_PASSWORD || "01parede";
+  const expected = process.env.ADMIN_PASSWORD || "g!8594221G";
   const url = new URL(request.url);
   const qp = url.searchParams.get("pw") || "";
   const header = request.headers.get("x-admin-password") || "";
