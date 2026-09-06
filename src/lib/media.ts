@@ -28,7 +28,7 @@ export const media = {
   leticia: leticia,
   limpeNome: limpenome,
   limpeNomeCpf: limpenome,
-  logoAmarelo: `${BASE}/logoamarelo.png`, // Mude para `logoamarelo` quando o arquivo existir
+  logoAmarelo: logocabecalho,
   score: `${BASE}/score.png`, // Mude para `scoreImg` quando o arquivo existir
   video1: video1,
   audios: {
