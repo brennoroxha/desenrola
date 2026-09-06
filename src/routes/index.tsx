@@ -3,10 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { media } from "@/lib/media";
 import { track } from "@/lib/tracking";
+import logoamareloLocal from "@/assets/logocabecalho.png";
+
 const iconeGov = { url: media.iconeGov };
 const limpeNome = { url: media.limpeNomeCpf };
 const iconeFooter = { url: media.iconeFooter };
-const logoLoading = { url: media.logoAmarelo };
+const logoLoading = { url: logoamareloLocal };
 
 export const Route = createFileRoute("/")({
   component: CpfPage,
