@@ -394,11 +394,28 @@ async function getStatusKlivo(id: string): Promise<StatusResult> {
 
 // ---------- Dispatcher ----------
 export async function createPix(gateway: GatewayId, input: CreatePixInput): Promise<CreatePixResult> {
+  if (process.env.VITE_USE_MOCKS === "true") {
+    console.log(`[mock] createPix via ${gateway} interceptado. Dados:`, input);
+    return {
+      ok: true,
+      transactionId: `mock_${Date.now()}`,
+      status: "PENDING",
+      copyPaste: "00020101021226580014br.gov.bcb.pix0136mock-pix-copy-paste-code-here5204000053039865802BR5915Mocked Gateway6009Sao Paulo62070503***6304E2B4",
+      qrCodeUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    };
+  }
+
   if (gateway === "blackcat") return createPixBlackcat(input);
   return createPixFreepay(input);
 }
 
 export async function getPixStatus(gateway: GatewayId, id: string): Promise<StatusResult> {
+  if (process.env.VITE_USE_MOCKS === "true") {
+    console.log(`[mock] getPixStatus via ${gateway} para id ${id}`);
+    return { status: "PAID", paidAt: new Date().toISOString() };
+  }
+
   if (gateway === "blackcat") return getStatusBlackcat(id);
   return getStatusFreepay(id);
 }

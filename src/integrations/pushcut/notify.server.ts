@@ -5,6 +5,11 @@ const URLS = {
 } as const;
 
 export async function pushcut(kind: keyof typeof URLS, valor?: string | number | null) {
+  if (process.env.VITE_USE_MOCKS === "true") {
+    console.log(`[mock] pushcut interceptado: ${kind}`, valor);
+    return;
+  }
+
   try {
     const label = kind === "aprovado" ? "Aprovado Desenrola" : "Gerado Desenrola";
     const valorFmt = valor ? `R$ ${valor}` : "";
