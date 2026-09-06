@@ -11,12 +11,13 @@ import logorodape from "../assets/logorodape.png";
 import logocabecalho from "../assets/logocabecalho.png";
 import iniciochat from "../assets/iniciochat.png";
 import image2 from "../assets/image2.png";
+import logoamarelo from "../assets/logoamarelo.png";
 
 // Algumas imagens não estão no assets novo, então vou reaproveitar o que tem para não quebrar
 const BASE = "https://ybtlwxqsfirulhrzddhv.supabase.co/storage/v1/object/public/desenrola-media";
 
 export const media = {
-  desenrola: `${BASE}/desenrola.png`,
+  desenrola: logoamarelo, // Usando a nova logomarca aqui
   fundo: `${BASE}/fundo.png`,
   heroInicio: iniciochat, // Usando iniciochat como hero
   iconeFooter: logorodape,
@@ -26,7 +27,7 @@ export const media = {
   leticia: leticia,
   limpeNome: limpenome,
   limpeNomeCpf: limpenome,
-  logoAmarelo: `${BASE}/logoamarelo.png`,
+  logoAmarelo: logoamarelo, // Usando a nova logomarca aqui
   score: `${BASE}/score.png`, // Fallback se faltar
   video1: video1,
   audios: {
