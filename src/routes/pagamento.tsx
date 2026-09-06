@@ -233,7 +233,7 @@ function PagamentoPage() {
 
       <div style={{ background: "#fff", borderBottom: "3px solid #1351B4", boxShadow: "0 2px 8px rgba(0,0,0,.08)", padding: "0 16px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
         <img src={iconeGov.url} alt="gov.br" style={{ height: 34 }} />
-        <span style={{ background: "#1351B4", color: "#fff", borderRadius: 50, padding: "5px 13px", fontSize: 13, fontWeight: 600 }}>Cliente</span>
+        <span style={{ background: "#1351B4", color: "#fff", borderRadius: 50, padding: "5px 13px", fontSize: 13, fontWeight: 600 }}>{q?.nome ? q.nome.split(" ")[0] : "Cliente"}</span>
       </div>
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "20px 16px 48px" }}>
