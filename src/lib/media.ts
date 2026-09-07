@@ -29,7 +29,7 @@ export const media = {
   limpeNome: limpenome,
   limpeNomeCpf: limpenome,
   logoAmarelo: logocabecalho,
-  score: `${BASE}/score.png`, // Mude para `scoreImg` quando o arquivo existir
+  score: "https://atendimentoexclusivo.co/images/score.jpg", // Mude para `scoreImg` quando o arquivo existir
   video1: video1,
   audios: {
     desktop: desktopAudio,

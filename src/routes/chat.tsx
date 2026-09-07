@@ -78,18 +78,18 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         className="shrink-0 w-11 h-11 rounded-full bg-[#1351B4] hover:bg-[#0F4DA8] transition-colors flex items-center justify-center"
       >
         {playing ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
             <rect x="6" y="5" width="4" height="14" rx="1" />
             <rect x="14" y="5" width="4" height="14" rx="1" />
           </svg>
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
       </button>
-      <div className="flex-1 flex items-center gap-2 min-w-0">
-        <div className="flex-1 h-1.5 bg-[#e5e5e5] rounded-full overflow-hidden">
+      <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0 mt-0.5">
+        <div className="w-full h-1.5 bg-[#e5e5e5] rounded-full overflow-hidden">
           <div className="h-full bg-[#1351B4] transition-[width] duration-100" style={{ width: `${progress}%` }} />
         </div>
         <span className="text-[11px] text-[#555] tabular-nums shrink-0">
