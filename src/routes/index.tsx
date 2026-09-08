@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import heroImg from "../assets/hero.png";
+import logoIcon from "../assets/logo-icon.png";
+import logoText from "../assets/logo-text.png";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -177,19 +180,19 @@ function LandingPage() {
       <main className="page-wrapper">
         <section className="hero-section">
           <img
-            src="/images/hero.png"
+            src={heroImg}
             alt="Pessoa segurando celular com tela de consulta"
             className="hero-image"
           />
         </section>
         <section className="content-card">
           <img
-            src="/images/logo-icon.png"
+            src={logoIcon}
             alt="Ícone Desenrola Brasil"
             className="logo-icon"
           />
           <img
-            src="/images/logo-text.png"
+            src={logoText}
             alt="Desenrola Brasil"
             className="logo-text"
           />

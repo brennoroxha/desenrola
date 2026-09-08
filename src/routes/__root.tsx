@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -129,8 +130,8 @@ function RootShell({ children }: { children: ReactNode }) {
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-
-              gtag('config', 'G-R1SP4FDD3C');
+              // Configurado send_page_view: false para evitar duplicidade, pois o React controlará o disparo via useEffect
+              gtag('config', 'G-R1SP4FDD3C', { send_page_view: false });
             `,
           }}
         />
@@ -145,6 +146,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useRouterState({ select: (s) => s.location });
+
+  useEffect(() => {
+    // Dispara 1 page_view por mudança de rota, preservando UTMs
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+      (window as any).gtag("event", "page_view", {
+        page_path: location.pathname,
+        page_location: window.location.href, // Mantém url completa com todos os UTMs/search params
+      });
+    }
+  }, [location.href]);
 
   useEffect(() => {
     if (window.location.pathname.startsWith("/admin")) return;
@@ -159,7 +171,6 @@ function RootComponent() {
 
   }, []);
 
-
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -167,4 +178,5 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
 
