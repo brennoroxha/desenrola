@@ -15,12 +15,7 @@ export const Route = createFileRoute("/cpf")({
 function CpfPage() {
   const [cpf, setCpf] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [booting, setBooting] = useState(true);
   useEffect(() => { track("cpf", "cpf_view"); }, []);
-  useEffect(() => {
-    const t = setTimeout(() => setBooting(false), 2000);
-    return () => clearTimeout(t);
-  }, []);
 
   const formatCPF = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 11);
@@ -164,22 +159,7 @@ function CpfPage() {
         </div>
       </div>
 
-      {booting && (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white">
-          <img
-            src={logoLoading.url}
-            alt="Desenrola"
-            className="w-[140px] max-w-[45vw] h-auto object-contain animate-fade-in"
-            width="140"
-            height="115"
-          />
-          <div
-            className="mt-8 w-8 h-8 rounded-full border-[3px] border-amarelo/25 border-t-amarelo animate-spin"
-            role="status"
-            aria-label="Carregando"
-          />
-        </div>
-      )}
+
 
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
