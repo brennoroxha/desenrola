@@ -314,7 +314,7 @@ function ChatPage() {
     const NOME_COMPLETO = data.nome;
     const CPF_FORMATADO = formatCpf(data.cpf);
     const CODIGO_ACORDO = generateAcordoCode();
-    const VALOR = "R$ 64,23";
+    const VALOR = "R$ 68,92";
     const PHONE = "";
     const EMAIL = "cliente@gmail.com";
 

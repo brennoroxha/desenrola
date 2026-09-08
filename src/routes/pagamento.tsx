@@ -67,7 +67,7 @@ function PagamentoPage() {
       nome: p.get("nome") || "Cliente",
       phone: p.get("phone") || "",
       email: "cliente@gmail.com",
-      valor: p.get("valor") || "R$ 64,23",
+      valor: p.get("valor") || "R$ 68,92",
       acordo: p.get("acordo") || "",
     };
     setQ(parsed);

@@ -177,19 +177,19 @@ function LandingPage() {
       <main className="page-wrapper">
         <section className="hero-section">
           <img
-            src="https://www.desenrolebrasil.online/images/hero.png"
+            src="/images/hero.png"
             alt="Pessoa segurando celular com tela de consulta"
             className="hero-image"
           />
         </section>
         <section className="content-card">
           <img
-            src="https://www.desenrolebrasil.online/images/logo-icon.png"
+            src="/images/logo-icon.png"
             alt="Ícone Desenrola Brasil"
             className="logo-icon"
           />
           <img
-            src="https://www.desenrolebrasil.online/images/logo-text.png"
+            src="/images/logo-text.png"
             alt="Desenrola Brasil"
             className="logo-text"
           />
