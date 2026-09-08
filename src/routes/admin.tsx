@@ -141,10 +141,7 @@ function AdminPage() {
       setError(j.db_error ? `Banco de dados indisponível: ${j.db_error}` : "");
       setData(j);
 
-      // Usando o estado de memória em vez de sessionStorage para evitar vazamento local a pedido do usuário,
-      // mas vamos manter no sessionStorage mascarado? Na verdade o ideal é não usar sessionStorage.
-      // Vou manter só na memória. (Comentando sessionStorage.setItem)
-      // sessionStorage.setItem("admin_pw", password);
+      sessionStorage.setItem("admin_pw", password);
       setAuthed(true);
     } catch (err) {
       setError("Falha de rede.");
@@ -282,6 +279,13 @@ function AdminPage() {
       .filter((x) => !x.tx || x.tx.status !== "PAID");
   }, [data]);
 
+  const onlineCount = useMemo(() => {
+    if (!data || day !== todayBR()) return 0;
+    const limit = new Date(Date.now() - 3 * 60000).toISOString();
+    const active = new Set(data.events.filter(e => e.criado_em >= limit).map(e => e.session_id));
+    return active.size;
+  }, [data, day]);
+
   if (!authed) {
     return (
       <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#000000", color: "#e2e8f0", fontFamily: "system-ui" }}>
@@ -330,13 +334,20 @@ function AdminPage() {
       {/* Main Content */}
       <main style={{ flex: 1, padding: 24, height: "100vh", overflow: "auto" }}>
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 18, color: "#fff" }}>
+          <h2 style={{ margin: 0, fontSize: 18, color: "#fff", display: "flex", alignItems: "center", gap: 12 }}>
             {tab === "funnel" ? "Funil de Conversão" :
              tab === "sessions" ? "Sessões e Visitantes" :
              tab === "origem" ? "Origem de Tráfego" :
              tab === "tx" ? "Pedidos e Transações" :
              tab === "comp" ? "Comprovantes Enviados" :
              tab === "gateway" ? "Gateway de Pagamento" : "Segurança (Bloqueio IP)"}
+             
+             {data && day === todayBR() && (
+               <span style={{ fontSize: 12, padding: "4px 10px", background: "#22c55e20", color: "#22c55e", borderRadius: 20, border: "1px solid #22c55e40", display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+                 <div style={{ width: 8, height: 8, background: "#22c55e", borderRadius: "50%", boxShadow: "0 0 8px #22c55e", animation: "pulse 2s infinite" }} />
+                 {onlineCount} online agora
+               </span>
+             )}
           </h2>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <label style={{ fontSize: 13, color: "#94a3b8" }}>Data base:</label>
