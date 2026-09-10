@@ -12,7 +12,7 @@ import logocabecalho from "../assets/logocabecalho.webp";
 import iniciochat from "../assets/iniciochat.webp";
 import image2 from "../assets/image2.webp";
 // import logoamarelo from "../assets/logoamarelo.png"; // DESCOMENTE ASSIM QUE COLOCAR O ARQUIVO NA PASTA
-// import scoreImg from "../assets/score.jpg"; // DESCOMENTE ASSIM QUE COLOCAR O ARQUIVO NA PASTA
+import scoreImg from "../assets/serasa_score.webp";
 
 // Algumas imagens não estão no assets novo, então vou reaproveitar o que tem para não quebrar
 const BASE = "https://ybtlwxqsfirulhrzddhv.supabase.co/storage/v1/object/public/desenrola-media";
@@ -29,7 +29,7 @@ export const media = {
   limpeNome: limpenome,
   limpeNomeCpf: limpenome,
   logoAmarelo: logocabecalho,
-  score: "https://atendimentoexclusivo.co/images/score.jpg", // Mude para `scoreImg` quando o arquivo existir
+  score: scoreImg,
   video1: video1,
   audios: {
     desktop: desktopAudio,
