@@ -447,7 +447,8 @@ function ChatPage() {
 
   const simulateTypingByLength = async (length: number) => {
     setIsTyping(true);
-    const ms = Math.min(2500, Math.max(600, length * 15));
+    // Tempo base de leitura e reação + tempo de digitação real (~45ms por caractere)
+    const ms = Math.min(8000, Math.max(1200, 1200 + length * 45));
     await sleep(ms);
     setIsTyping(false);
   };
