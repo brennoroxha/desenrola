@@ -15,6 +15,9 @@ const pagamentoAudio = { url: media.audios.pagamento };
 const avisoAudio = { url: media.audios.aviso };
 
 export const Route = createFileRoute("/chat")({
+  head: () => ({
+    meta: [{ title: "Atendimento Desenrola Brasil" }],
+  }),
   component: ChatPage,
 });
 
