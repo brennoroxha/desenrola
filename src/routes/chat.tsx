@@ -292,6 +292,7 @@ function ChatPage() {
 `);
     await botSay("c5", "Identificamos pendências com as seguintes instituições parceiras:");
     addMessage({ id: "c6", type: "bot", image: image2.url });
+    await botSay("c6b", "e muitas outras empresas participantes..");
 
     await waitButtons("c7", ["CONTINUAR"]);
 
@@ -578,15 +579,26 @@ function ChatPage() {
 
             {msg.type === "typing" && msg.buttons && (
               <div className="flex flex-col gap-2.5 w-full mt-1.5 px-4 mb-2">
-                {msg.buttons.map((btn) => (
-                  <button
-                    key={btn}
-                    onClick={() => handleButtonClick(msg.id, btn)}
-                    className="bg-white border border-[#1351B4] text-[#1351B4] rounded-lg py-3 px-4 text-sm font-bold uppercase w-full text-center hover:bg-[#f0f4ff] transition-colors shadow-sm"
-                  >
-                    {btn}
-                  </button>
-                ))}
+                {msg.buttons.map((btn) => {
+                  const isOutline = btn === "Sim, está correto." || btn === "Não sou eu";
+                  const isPulse = btn === "BUSCAR ACORDO";
+                  
+                  return (
+                    <button
+                      key={btn}
+                      onClick={() => handleButtonClick(msg.id, btn)}
+                      className={`
+                        rounded-lg py-3 px-4 text-sm font-bold uppercase w-full text-center transition-colors shadow-sm
+                        ${isOutline 
+                          ? "bg-white border border-[#1351B4] text-[#1351B4] hover:bg-[#f0f4ff]" 
+                          : "bg-[#1351B4] border border-[#1351B4] text-white hover:bg-[#0F4DA8]"}
+                        ${isPulse ? "animate-[pulse_1.5s_ease-in-out_infinite]" : ""}
+                      `}
+                    >
+                      {btn}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
