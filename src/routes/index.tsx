@@ -192,8 +192,8 @@ function Homepage() {
         .hidden { display: none; }
       `}</style>
       
-      <div className="bg-custom" id="bg" style={{ background: \`linear-gradient(140deg, \${CONFIG.colors.bgFrom}, \${CONFIG.colors.bgTo})\` }}></div>
-      <main className="custom-card" id="card" style={{ boxShadow: \`0 18px 46px \${CONFIG.colors.primaryDark}30\`, color: CONFIG.colors.text }}>
+      <div className="bg-custom" id="bg" style={{ background: `linear-gradient(140deg, ${CONFIG.colors.bgFrom}, ${CONFIG.colors.bgTo})` }}></div>
+      <main className="custom-card" id="card" style={{ boxShadow: `0 18px 46px ${CONFIG.colors.primaryDark}30`, color: CONFIG.colors.text }}>
         <span className="custom-tag" id="tag" style={{ background: CONFIG.colors.soft, color: CONFIG.colors.primary }}>
           {CONFIG.content.tag}
         </span>
