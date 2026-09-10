@@ -582,13 +582,15 @@ function ChatPage() {
                 {msg.buttons.map((btn) => {
                   const isOutline = btn === "Sim, está correto." || btn === "Não sou eu";
                   const isPulse = btn === "BUSCAR ACORDO";
+                  const isLongText = btn.length > 25;
                   
                   return (
                     <button
                       key={btn}
                       onClick={() => handleButtonClick(msg.id, btn)}
                       className={`
-                        rounded-lg py-3 px-4 text-sm font-bold uppercase w-full text-center transition-colors shadow-sm
+                        rounded-lg py-3 font-bold uppercase w-full text-center transition-colors shadow-sm
+                        ${isLongText ? "text-[11px] sm:text-sm px-2" : "text-sm px-4"}
                         ${isOutline 
                           ? "bg-white border border-[#1351B4] text-[#1351B4] hover:bg-[#f0f4ff]" 
                           : "bg-[#1351B4] border border-[#1351B4] text-white hover:bg-[#0F4DA8]"}

