@@ -31,19 +31,19 @@ export const Route = createFileRoute("/api/public/admin/data")({
             supabaseAdmin.from("desenrola_page_events")
               .select("*")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).limit(2000),
+              .order("criado_em", { ascending: false }).limit(50000),
             supabaseAdmin.from("desenrola_pix_transactions")
               .select("*")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).limit(1000),
+              .order("criado_em", { ascending: false }).limit(10000),
             supabaseAdmin.from("desenrola_comprovantes")
               .select("id, transaction_id, acordo, cpf, nome, filename, mime, size_bytes, ip, criado_em")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).limit(500),
+              .order("criado_em", { ascending: false }).limit(5000),
             supabaseAdmin.from("desenrola_cpf_consultas")
               .select("cpf, nome, consultado_em")
               .gte("consultado_em", startISO).lte("consultado_em", endISO)
-              .order("consultado_em", { ascending: false }).limit(1000),
+              .order("consultado_em", { ascending: false }).limit(10000),
           ]);
 
           const dbError =
