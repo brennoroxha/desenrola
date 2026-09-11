@@ -25,7 +25,6 @@ const AUDIO_GAIN = 2.5;
 
 function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
   const ref = useRef<HTMLAudioElement>(null);
-  const boostedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -37,40 +36,28 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
     return `${m}:${r.toString().padStart(2, "0")}`;
   };
 
-  const boost = () => {
-    if (boostedRef.current) return;
-    const el = ref.current;
-    if (!el) return;
-    try {
-      const AC: typeof AudioContext =
-        (window as any).AudioContext || (window as any).webkitAudioContext;
-      if (!AC) return;
-      const ctx = new AC();
-      
-      // Criamos um nó de ganho para o boost
-      const gain = ctx.createGain();
-      gain.gain.value = AUDIO_GAIN;
-
-      // Importante: Em alguns navegadores, o nó de origem deve ser criado uma única vez
-      const source = ctx.createMediaElementSource(el);
-      source.connect(gain).connect(ctx.destination);
-      
-      if (ctx.state === "suspended") void ctx.resume();
-      boostedRef.current = true;
-    } catch (e) {
-      console.warn("Audio boost failed, falling back to standard volume", e);
-      el.volume = 1;
-    }
-  };
-
   const toggle = () => {
     const el = ref.current;
     if (!el) return;
-    boost();
-    if (el.paused) el.play(); else el.pause();
+    if (el.paused) {
+      el.play().catch(e => console.error("Erro ao dar play:", e));
+    } else {
+      el.pause();
+    }
   };
 
   const progress = duration > 0 ? (current / duration) * 100 : 0;
+
+  useEffect(() => {
+    // Tenta autoplay silenciosamente, já que o autoPlay nativo pode falhar sem interação
+    const el = ref.current;
+    if (el) {
+      el.play().catch(() => {
+        // Autoplay bloqueado pelo navegador, aguarda clique do usuário
+        setPlaying(false);
+      });
+    }
+  }, [src]);
 
   return (
     <div className="bg-white border border-[#e5e5e5] rounded-[18px_18px_18px_4px] px-3 py-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.07)] flex items-center gap-3 w-full">
@@ -103,9 +90,7 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         ref={ref}
         src={src}
         preload="auto"
-        crossOrigin="anonymous"
-        autoPlay
-        onPlay={() => { boost(); setPlaying(true); }}
+        onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}

@@ -275,7 +275,7 @@ function PagamentoPage() {
                 placeholder="( ) _____-____"
                 value={phone}
                 onChange={(e) => { setPhone(formatPhone(e.target.value)); setPhoneError(""); }}
-                style={{ padding: 10, border: phoneError ? "1px solid #DC2626" : "1px solid #ccc", borderRadius: 6, width: "100%", fontSize: 14, fontFamily: "inherit" }}
+                style={{ padding: 10, border: phoneError ? "1px solid #DC2626" : "1px solid #ccc", borderRadius: 6, width: "100%", fontSize: "16px", fontFamily: "inherit" }}
               />
               {phoneError && <div style={{ color: "#DC2626", fontSize: 12, marginTop: 4 }}>{phoneError}</div>}
             </div>
