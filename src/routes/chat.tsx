@@ -416,11 +416,6 @@ function ChatPage() {
     return new Promise((resolve) => {
       resolversRef.current[id] = resolve;
       addMessage({ id, type: "audio", audio: audioUrl, pendingButtonLabel: buttonLabel, audioEnded: false });
-      
-      // Auto-libera o botão após 3.5s para o usuário não ficar preso se o autoplay falhar
-      setTimeout(() => {
-        setMessages(prev => prev.map(m => m.id === id ? { ...m, audioEnded: true } : m));
-      }, 3500);
     });
   };
 
@@ -428,15 +423,6 @@ function ChatPage() {
     return new Promise((resolve) => {
       resolversRef.current[id] = () => resolve();
       addMessage({ id, type: "audio", audio: audioUrl, audioEnded: false, audioResolveOnEnd: true });
-      
-      // Auto-resolve o fluxo após 4s para o chat não travar se o autoplay falhar no celular
-      setTimeout(() => {
-        const r = resolversRef.current[id];
-        if (r) {
-          delete resolversRef.current[id];
-          r("");
-        }
-      }, 4000);
     });
   };
 
