@@ -152,7 +152,7 @@ function AdminPage() {
   };
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("admin_pw");
+    const saved = localStorage.getItem("admin_pw");
     if (saved) { setPw(saved); setAuthed(true); }
   }, []);
 
@@ -165,13 +165,13 @@ function AdminPage() {
         headers: { "Content-Type": "application/json", "X-Admin-Password": password },
         body: JSON.stringify({ day: d }),
       });
-      if (res.status === 401) { setError("Senha inválida."); setAuthed(false); sessionStorage.removeItem("admin_pw"); setData(null); return; }
+      if (res.status === 401) { setError("Senha inválida."); setAuthed(false); localStorage.removeItem("admin_pw"); setData(null); return; }
       const j = await res.json();
       if (!j.ok) { setError(j.message || "Erro"); return; }
       setError(j.db_error ? `Banco de dados indisponível: ${j.db_error}` : "");
       setData(j);
 
-      sessionStorage.setItem("admin_pw", password);
+      localStorage.setItem("admin_pw", password);
       setAuthed(true);
     } catch (err) {
       setError("Falha de rede.");
@@ -355,7 +355,7 @@ function AdminPage() {
           ))}
         </div>
         <div style={{ marginTop: "auto", padding: "0 20px" }}>
-          <button onClick={() => { sessionStorage.removeItem("admin_pw"); setAuthed(false); }}
+          <button onClick={() => { localStorage.removeItem("admin_pw"); setAuthed(false); }}
             style={{ width: "100%", padding: "10px", background: "#333", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontSize: 13 }}>
             Sair do Painel
           </button>
