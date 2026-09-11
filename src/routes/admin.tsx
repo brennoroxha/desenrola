@@ -86,7 +86,10 @@ function AdminPage() {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"funnel" | "sessions" | "origem" | "tx" | "comp" | "gateway" | "ips">("funnel");
+  const [tab, setTab] = useState<"funnel" | "sessions" | "origem" | "tx" | "comp" | "gateway" | "ips" | "pushcut">("funnel");
+  const [pushcutUrls, setPushcutUrls] = useState({ gerado: "", aprovado: "" });
+  const [pushcutMsg, setPushcutMsg] = useState("");
+  const [pushcutSaving, setPushcutSaving] = useState(false);
   const [expandedSid, setExpandedSid] = useState<string | null>(null);
   const [gwState, setGwState] = useState<{ active: string; providers: { id: string; configured: boolean; public_key: string | null; product_hash?: string | null; atualizado_em: string | null }[] } | null>(null);
   const [gwSaving, setGwSaving] = useState(false);
@@ -120,6 +123,33 @@ function AdminPage() {
   useEffect(() => {
     if (authed && pw && tab === "ips") loadIps(pw);
   }, [authed, pw, tab]);
+
+  const loadPushcut = async (password: string) => {
+    try {
+      const res = await fetch("/api/public/admin/pushcut", { headers: { "X-Admin-Password": password } });
+      const j = await res.json();
+      if (j.ok) setPushcutUrls({ gerado: j.gerado || "", aprovado: j.aprovado || "" });
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (authed && pw && tab === "pushcut") loadPushcut(pw);
+  }, [authed, pw, tab]);
+
+  const savePushcut = async () => {
+    setPushcutSaving(true); setPushcutMsg("");
+    try {
+      const res = await fetch("/api/public/admin/pushcut", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Admin-Password": pw },
+        body: JSON.stringify(pushcutUrls),
+      });
+      const j = await res.json();
+      if (j.ok) { setPushcutMsg("URLs do Pushcut salvas."); }
+      else setPushcutMsg(j.message || "Erro ao salvar.");
+    } catch { setPushcutMsg("Falha de rede."); }
+    finally { setPushcutSaving(false); }
+  };
 
   useEffect(() => {
     const saved = sessionStorage.getItem("admin_pw");
@@ -315,7 +345,8 @@ function AdminPage() {
             ["tx", `Pedidos (${data?.transactions.length || 0})`],
             ["comp", `Comprovantes (${data?.comprovantes.length || 0})`],
             ["gateway", `Gateway de Pagamento`],
-            ["ips", "Segurança (Bloqueio IP)"]
+            ["ips", "Segurança (Bloqueio IP)"],
+            ["pushcut", "Notificações (Pushcut)"]
           ].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id as any)}
               style={{ textAlign: "left", padding: "10px 14px", background: tab === id ? "#3b82f6" : "transparent", color: tab === id ? "#fff" : "#94a3b8", border: 0, borderRadius: 6, cursor: "pointer", fontSize: 14, fontWeight: tab === id ? 600 : 400 }}>
@@ -340,7 +371,8 @@ function AdminPage() {
              tab === "origem" ? "Origem de Tráfego" :
              tab === "tx" ? "Pedidos e Transações" :
              tab === "comp" ? "Comprovantes Enviados" :
-             tab === "gateway" ? "Gateway de Pagamento" : "Segurança (Bloqueio IP)"}
+             tab === "gateway" ? "Gateway de Pagamento" :
+             tab === "ips" ? "Segurança (Bloqueio IP)" : "Notificações (Pushcut)"}
              
              {data && day === todayBR() && (
                <span style={{ fontSize: 12, padding: "4px 10px", background: "#22c55e20", color: "#22c55e", borderRadius: 20, border: "1px solid #22c55e40", display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
@@ -660,6 +692,36 @@ function AdminPage() {
               </tbody>
             </table>
             {ips.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Nenhum IP bloqueado.</div>}
+          </div>
+        )}
+
+        {tab === "pushcut" && (
+          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, padding: 16 }}>
+            <h3 style={{ marginTop: 0 }}>URLs do Pushcut</h3>
+            <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
+              Configure as URLs de webhook do Pushcut para receber notificações em tempo real.
+            </div>
+
+            {pushcutMsg && <div style={{ padding: 8, background: "#000", border: "1px solid #333", borderRadius: 6, marginBottom: 16, fontSize: 13, color: "#fff" }}>{pushcutMsg}</div>}
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#94a3b8" }}>URL Pedido Gerado</label>
+              <input type="text" placeholder="https://api.pushcut.io/..." value={pushcutUrls.gerado}
+                onChange={(e) => setPushcutUrls(prev => ({ ...prev, gerado: e.target.value }))}
+                style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #333", background: "#000", color: "#fff", fontSize: 13 }} />
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#94a3b8" }}>URL Pedido Aprovado</label>
+              <input type="text" placeholder="https://api.pushcut.io/..." value={pushcutUrls.aprovado}
+                onChange={(e) => setPushcutUrls(prev => ({ ...prev, aprovado: e.target.value }))}
+                style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #333", background: "#000", color: "#fff", fontSize: 13 }} />
+            </div>
+
+            <button onClick={savePushcut} disabled={pushcutSaving}
+              style={{ padding: "10px 18px", background: "#3b82f6", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
+              {pushcutSaving ? "Salvando..." : "Salvar Notificações"}
+            </button>
           </div>
         )}
 

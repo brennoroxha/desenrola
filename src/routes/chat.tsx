@@ -233,7 +233,7 @@ function ChatPage() {
     await simulateTypingByLength(0);
     addMessage({ id: "4", type: "bot", video: video1.url });
 
-    await sleep(1500);
+    await sleep(1000);
     addMessage({ id: "5", type: "system", content: "<em><strong>(Atendente Letícia entrou na conversa..)</strong></em> 💬" });
 
     if (data && (data.status === 200 || data.status === "200")) {
@@ -284,13 +284,13 @@ function ChatPage() {
     await waitAudioButton("c8", desktopAudio.url, "SIM! QUERO NEGOCIAR");
 
     await botSay("c9", "<em>Por favor, aguarde analisarmos a situação do seu CPF em nosso sistema..</em>");
-    await sleep(2000);
+    await sleep(1200);
     await botSay("c10", "<em>Consultando..</em>");
-    await sleep(2000);
+    await sleep(1200);
     await botSay("c11", "<strong>Análise concluída!</strong>");
-    await sleep(2000);
+    await sleep(1200);
     await botSay("c12", "Identificamos <strong>4 dívidas ativas</strong> no sistema. Os valores variam entre <strong>R$ 1.728,74 a R$ 5.278,23</strong> de dívida <strong>em seu CPF.</strong>");
-    await sleep(2000);
+    await sleep(1200);
 
     addMessage({
       id: "c13",
@@ -438,8 +438,8 @@ function ChatPage() {
 
   const simulateTypingByLength = async (length: number) => {
     setIsTyping(true);
-    // Tempo base de leitura e reação + tempo de digitação real (~35ms por caractere)
-    const ms = Math.min(7000, Math.max(900, 900 + length * 35));
+    // Velocidade bem rápida para não entediar o usuário
+    const ms = Math.min(4500, Math.max(500, 500 + length * 15));
     await sleep(ms);
     setIsTyping(false);
   };
@@ -499,10 +499,11 @@ function ChatPage() {
                   }}>
                     <video 
                       controls={false} 
-                      className="w-full rounded-lg mt-1"
+                      className="w-full rounded-lg mt-1 bg-black/5 min-h-[120px]"
                       autoPlay
                       muted
                       playsInline
+                      preload="auto"
                       onPlay={(e) => {
                         if (!e.currentTarget.muted) {
                           e.currentTarget.parentElement?.querySelector('.unmute-overlay')?.classList.add('hidden');
