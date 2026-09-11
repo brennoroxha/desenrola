@@ -90,6 +90,7 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         ref={ref}
         src={src}
         preload="auto"
+        autoPlay
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
@@ -104,13 +105,17 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
 
 interface Message {
   id: string;
-  type: "bot" | "user" | "system" | "info" | "typing" | "audio" | "link";
+  type: "bot" | "user" | "system" | "info" | "typing" | "audio" | "link" | "acordo";
   content?: string;
   image?: string;
   video?: string;
   audio?: string;
   href?: string;
   infoLines?: { text: string; style: "label" | "value" | "bold" }[];
+  titulo?: string;
+  valor_original?: number;
+  valor_desconto?: number;
+  valor_final?: number;
   buttons?: string[];
   pendingButtonLabel?: string;
   audioEnded?: boolean;
@@ -399,6 +404,11 @@ function ChatPage() {
     return new Promise((resolve) => {
       resolversRef.current[id] = resolve;
       addMessage({ id, type: "audio", audio: audioUrl, pendingButtonLabel: buttonLabel, audioEnded: false });
+      
+      // Auto-libera o botão após 3.5s para o usuário não ficar preso se o autoplay falhar
+      setTimeout(() => {
+        setMessages(prev => prev.map(m => m.id === id ? { ...m, audioEnded: true } : m));
+      }, 3500);
     });
   };
 
@@ -406,6 +416,15 @@ function ChatPage() {
     return new Promise((resolve) => {
       resolversRef.current[id] = () => resolve();
       addMessage({ id, type: "audio", audio: audioUrl, audioEnded: false, audioResolveOnEnd: true });
+      
+      // Auto-resolve o fluxo após 4s para o chat não travar se o autoplay falhar no celular
+      setTimeout(() => {
+        const r = resolversRef.current[id];
+        if (r) {
+          delete resolversRef.current[id];
+          r("");
+        }
+      }, 4000);
     });
   };
 
@@ -543,6 +562,29 @@ function ChatPage() {
                     {line.text}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {msg.type === "acordo" && (
+              <div className="bg-white border-[3px] border-[#1351B4] rounded-2xl p-4 shadow-xl w-full max-w-[85%] animate-in zoom-in-95 my-2">
+                <div className="bg-[#1351B4] text-white font-black text-center p-2.5 -mx-4 -mt-4 rounded-t-[13px] mb-4 text-[15px] uppercase tracking-wide">
+                  {msg.titulo || "Acordo Encontrado"}
+                </div>
+                <div className="flex flex-col gap-2.5 text-[15px]">
+                  <div className="flex justify-between text-gray-500 line-through">
+                    <span>Valor Original:</span>
+                    <span>R$ {msg.valor_original?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-[#10b981] font-bold">
+                    <span>Desconto Aplicado:</span>
+                    <span>- R$ {msg.valor_desconto?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="h-[2px] bg-gray-100 my-1 rounded-full"></div>
+                  <div className="flex justify-between font-black text-[20px] text-[#1351B4]">
+                    <span>Por Apenas:</span>
+                    <span>R$ {msg.valor_final?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
             )}
 
