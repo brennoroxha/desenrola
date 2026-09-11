@@ -108,7 +108,7 @@ function Chat2() {
         return;
       }
 
-      await wait(2000);
+      await wait(1400);
       setTyping(false);
       push(
         "bot",
@@ -116,7 +116,7 @@ function Chat2() {
       );
 
       setTyping(true);
-      await wait(1200);
+      await wait(1600);
       setTyping(false);
       push("bot", `Estou consultando o CPF ${formatCPF(cpfRaw)} nas bases parceiras. Um instante...`);
       setTyping(true);
@@ -132,7 +132,7 @@ function Chat2() {
         /* ignora */
       }
 
-      await wait(1000);
+      await wait(1200);
 
       if (!nome) {
         setTyping(false);
@@ -145,7 +145,7 @@ function Chat2() {
       push("bot", `Encontrei o cadastro de ${nome}.`);
 
       setTyping(true);
-      await wait(1200);
+      await wait(1500);
       setTyping(false);
       push("bot", "Para proteger os seus dados, confirme sua identidade: qual é o nome completo da sua mãe?");
 
@@ -162,7 +162,7 @@ function Chat2() {
 
     if (nome !== "NENHUMA DESTAS") {
       setTyping(true);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 900));
       setTyping(false);
       idRef.current += 1;
       setMsgs((m) => [
@@ -180,7 +180,7 @@ function Chat2() {
     setOpcoes([]);
     setStatus("Aguarde, estamos verificando...");
     setTyping(true);
-    await wait(1000);
+    await wait(1100);
     setTyping(false);
     idRef.current += 1;
     setMsgs((m) => [...m, { id: idRef.current, from: "bot", text: "Identidade confirmada!" }]);
