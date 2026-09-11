@@ -56,7 +56,7 @@ async function createPixFreepay(input: CreatePixInput): Promise<CreatePixResult>
     },
     items: [{ title: "KIT Celimax", unit_price: input.amount_cents, quantity: 1, tangible: false, external_ref: input.acordo }],
     pix: { expires_in_days: 1 },
-    metadata: { acordo: input.acordo, provider_name: "Desenrola Brasil" },
+    metadata: { acordo: input.acordo, provider_name: "Celimax" },
     ip: input.ip,
   };
   let res: Response;
@@ -126,7 +126,7 @@ async function createPixBlackcat(input: CreatePixInput): Promise<CreatePixResult
     pix: { expiresInDays: 1 },
     postbackUrl: input.postbackUrl,
     externalRef: input.acordo,
-    metadata: JSON.stringify({ acordo: input.acordo, provider_name: "Desenrola Brasil" }),
+    metadata: JSON.stringify({ acordo: input.acordo, provider_name: "Celimax" }),
   };
   let res: Response;
   try {
@@ -215,7 +215,7 @@ async function createPixAlpha(input: CreatePixInput): Promise<CreatePixResult> {
     postbackUrl: input.postbackUrl,
     externalRef: input.acordo,
     ip: input.ip,
-    metadata: JSON.stringify({ acordo: input.acordo, provider_name: "Desenrola Brasil" }),
+    metadata: JSON.stringify({ acordo: input.acordo, provider_name: "Celimax" }),
     pix: { expiresInDays: 1 },
     customer: {
       name: input.nome,
