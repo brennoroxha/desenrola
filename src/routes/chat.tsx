@@ -25,6 +25,7 @@ const AUDIO_GAIN = 2.5;
 
 function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
   const ref = useRef<HTMLAudioElement>(null);
+  const boostedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -36,28 +37,38 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
     return `${m}:${r.toString().padStart(2, "0")}`;
   };
 
-  const toggle = () => {
+  const boost = () => {
+    if (boostedRef.current) return;
     const el = ref.current;
     if (!el) return;
-    if (el.paused) {
-      el.play().catch(e => console.error("Erro ao dar play:", e));
-    } else {
-      el.pause();
+    try {
+      const AC: typeof AudioContext =
+        (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      
+      const gain = ctx.createGain();
+      gain.gain.value = AUDIO_GAIN;
+
+      const source = ctx.createMediaElementSource(el);
+      source.connect(gain).connect(ctx.destination);
+      
+      if (ctx.state === "suspended") void ctx.resume();
+      boostedRef.current = true;
+    } catch (e) {
+      console.warn("Audio boost failed, falling back to standard volume", e);
+      el.volume = 1;
     }
   };
 
-  const progress = duration > 0 ? (current / duration) * 100 : 0;
-
-  useEffect(() => {
-    // Tenta autoplay silenciosamente, já que o autoPlay nativo pode falhar sem interação
+  const toggle = () => {
     const el = ref.current;
-    if (el) {
-      el.play().catch(() => {
-        // Autoplay bloqueado pelo navegador, aguarda clique do usuário
-        setPlaying(false);
-      });
-    }
-  }, [src]);
+    if (!el) return;
+    boost();
+    if (el.paused) el.play(); else el.pause();
+  };
+
+  const progress = duration > 0 ? (current / duration) * 100 : 0;
 
   return (
     <div className="bg-white border border-[#e5e5e5] rounded-[18px_18px_18px_4px] px-3 py-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.07)] flex items-center gap-3 w-full">
@@ -68,18 +79,18 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         className="shrink-0 w-11 h-11 rounded-full bg-[#1351B4] hover:bg-[#0F4DA8] transition-colors flex items-center justify-center"
       >
         {playing ? (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
             <rect x="6" y="5" width="4" height="14" rx="1" />
             <rect x="14" y="5" width="4" height="14" rx="1" />
           </svg>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
       </button>
-      <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0 mt-0.5">
-        <div className="w-full h-1.5 bg-[#e5e5e5] rounded-full overflow-hidden">
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        <div className="flex-1 h-1.5 bg-[#e5e5e5] rounded-full overflow-hidden">
           <div className="h-full bg-[#1351B4] transition-[width] duration-100" style={{ width: `${progress}%` }} />
         </div>
         <span className="text-[11px] text-[#555] tabular-nums shrink-0">
@@ -90,8 +101,9 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         ref={ref}
         src={src}
         preload="auto"
+        crossOrigin="anonymous"
         autoPlay
-        onPlay={() => setPlaying(true)}
+        onPlay={() => { boost(); setPlaying(true); }}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
@@ -289,13 +301,13 @@ function ChatPage() {
     await waitAudioButton("c8", desktopAudio.url, "SIM! QUERO NEGOCIAR");
 
     await botSay("c9", "<em>Por favor, aguarde analisarmos a situação do seu CPF em nosso sistema..</em>");
-    await sleep(2000);
+    await sleep(3000);
     await botSay("c10", "<em>Consultando..</em>");
-    await sleep(2000);
+    await sleep(3000);
     await botSay("c11", "<strong>Análise concluída!</strong>");
-    await sleep(2000);
+    await sleep(3000);
     await botSay("c12", "Identificamos <strong>4 dívidas ativas</strong> no sistema. Os valores variam entre <strong>R$ 1.728,74 a R$ 5.278,23</strong> de dívida <strong>em seu CPF.</strong>");
-    await sleep(2000);
+    await sleep(3000);
 
     addMessage({
       id: "c13",
