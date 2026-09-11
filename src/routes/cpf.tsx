@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 /** coloque uma mascara de cpf na caixa onde precisa preencher o cpf */
 import { useEffect, useState } from "react";
 import { media } from "@/lib/media";
@@ -13,8 +13,11 @@ export const Route = createFileRoute("/cpf")({
 });
 
 function CpfPage() {
+  const navigate = useNavigate();
   const [cpf, setCpf] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   useEffect(() => { track("cpf", "cpf_view"); }, []);
 
   const formatCPF = (v: string) => {
@@ -41,6 +44,7 @@ function CpfPage() {
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrorMsg("");
     setCpf(formatCPF(e.target.value));
   };
 
@@ -48,7 +52,7 @@ function CpfPage() {
     e.preventDefault();
     const raw = cpf.replace(/\D/g, "");
     if (!isValidCPF(raw)) {
-      alert("CPF inválido. Verifique os dígitos.");
+      setErrorMsg("CPF inválido. Verifique os dígitos.");
       return;
     }
 
@@ -57,7 +61,7 @@ function CpfPage() {
 
     // Pequeno atraso para mostrar a mensagem de consulta antes do redirecionamento
     setTimeout(() => {
-      window.location.href = `/chat?cpf=${raw}`;
+      navigate({ to: "/chat", search: { cpf: raw } as never });
     }, 2500);
   };
 
@@ -106,7 +110,7 @@ function CpfPage() {
             <form className="text-left" onSubmit={handleSubmit}>
               <div className="text-sm font-bold text-[#333] mb-2">CPF</div>
               <input
-                className="w-full px-4 py-3.5 border border-borda-input rounded-lg text-base outline-none focus:border-azul-primario mb-4"
+                className={`w-full px-4 py-3.5 border ${errorMsg ? 'border-red-500' : 'border-borda-input'} rounded-lg text-base outline-none focus:border-azul-primario mb-1`}
                 type="tel"
                 value={cpf}
                 onChange={handleCpfChange}
@@ -114,6 +118,12 @@ function CpfPage() {
                 placeholder="000.000.000-00"
                 required
               />
+              {errorMsg && (
+                <div className="text-red-500 text-sm mb-3">
+                  {errorMsg}
+                </div>
+              )}
+              {!errorMsg && <div className="mb-4"></div>}
 
               <button type="submit" className="btn-primary mt-0">
                 Continuar
