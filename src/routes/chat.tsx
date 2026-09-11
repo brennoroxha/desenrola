@@ -27,6 +27,7 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
   const ref = useRef<HTMLAudioElement>(null);
   const boostedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
+  const [finished, setFinished] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -76,12 +77,16 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         type="button"
         onClick={toggle}
         aria-label={playing ? "Pausar" : "Reproduzir"}
-        className="shrink-0 w-11 h-11 rounded-full bg-[#1351B4] hover:bg-[#0F4DA8] transition-colors flex items-center justify-center"
+        className={`shrink-0 w-11 h-11 rounded-full transition-colors flex items-center justify-center ${finished && !playing ? "bg-[#10b981]" : "bg-[#1351B4] hover:bg-[#0F4DA8]"}`}
       >
         {playing ? (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
             <rect x="6" y="5" width="4" height="14" rx="1" />
             <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+        ) : finished ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         ) : (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
@@ -107,7 +112,7 @@ function AudioPlayer({ src, onEnded }: { src: string; onEnded: () => void }) {
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onEnded={() => { setPlaying(false); onEnded(); }}
+        onEnded={() => { setPlaying(false); setFinished(true); onEnded(); }}
         className="hidden"
       />
     </div>
@@ -132,6 +137,7 @@ interface Message {
   pendingButtonLabel?: string;
   audioEnded?: boolean;
   audioResolveOnEnd?: boolean;
+  hideAvatar?: boolean;
 }
 
 interface CpfData {
@@ -230,7 +236,7 @@ function ChatPage() {
 
   const startFlow = async (dataPromise: Promise<CpfData | null>) => {
     await simulateTypingByLength(0);
-    addMessage({ id: "1", type: "bot", image: image1.url });
+    addMessage({ id: "1", type: "bot", image: image1.url, hideAvatar: true });
 
     // Mensagem 2 depende do nome; aguarda os dados aqui (com 120ms de "digitando" já rolando).
     const typingP = simulateTypingByLength(120);
@@ -242,15 +248,15 @@ function ChatPage() {
       ? `Olá <strong>${nomeCompleto}</strong>, esse é um canal oficial de atendimento do <strong>Desenrola Brasil</strong> e os seus dados estão seguros conosco. 🔒`
       : `Olá, esse é um canal oficial de atendimento do <strong>Desenrola Brasil</strong> e os seus dados estão seguros conosco. 🔒`;
 
-    addMessage({ id: "2", type: "bot", content: saudacao });
+    addMessage({ id: "2", type: "bot", content: saudacao, hideAvatar: true });
 
     await simulateTypingByLength(80);
-    addMessage({ id: "3", type: "bot", content: "Aguarde em alguns instantes, um de nossos atendentes entrará na conversa.." });
+    addMessage({ id: "3", type: "bot", content: "Aguarde em alguns instantes, um de nossos atendentes entrará na conversa..", hideAvatar: true });
 
     await simulateTypingByLength(0);
-    addMessage({ id: "4", type: "bot", video: video1.url });
+    addMessage({ id: "4", type: "bot", video: video1.url, hideAvatar: true });
 
-    await sleep(2000);
+    await sleep(3000);
     addMessage({ id: "5", type: "system", content: "<em><strong>(Atendente Letícia entrou na conversa..)</strong></em> 💬" });
 
     if (data && (data.status === 200 || data.status === "200")) {
@@ -489,7 +495,7 @@ function ChatPage() {
       <div className="flex-1 overflow-y-auto p-4 max-w-[680px] w-full mx-auto flex flex-col gap-2">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"} items-end mb-2`}>
-            {msg.type !== "user" && msg.type !== "system" && msg.type !== "typing" && (
+            {msg.type !== "user" && msg.type !== "system" && msg.type !== "typing" && !msg.hideAvatar && (
               <img src={leticiaAvatar.url} alt="" className="w-[30px] h-[30px] rounded-full object-cover mr-2 mb-0.5" />
             )}
 
@@ -643,7 +649,9 @@ function ChatPage() {
         ))}
         {isTyping && (
           <div className="flex justify-start items-end mb-2">
-            <img src={leticiaAvatar.url} alt="" className="w-[30px] h-[30px] rounded-full object-cover mr-2 mb-0.5" />
+            {messages.some(m => m.id === "5") && (
+              <img src={leticiaAvatar.url} alt="" className="w-[30px] h-[30px] rounded-full object-cover mr-2 mb-0.5" />
+            )}
             <div className="bg-white text-[#333] border border-[#e5e5e5] rounded-[18px_18px_18px_4px] p-[11px_15px] shadow-[0_2px_6px_rgba(0,0,0,0.07)]">
               <div className="flex gap-1 py-1">
                 <span className="w-1.5 h-1.5 bg-[#bbb] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
