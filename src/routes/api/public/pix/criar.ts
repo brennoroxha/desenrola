@@ -96,8 +96,7 @@ export const Route = createFileRoute("/api/public/pix/criar")({
           }
         })();
 
-        // Limite duro: só espera até 400 ms pelas gravações; o resto continua em background.
-        await Promise.race([sideEffects, new Promise((r) => setTimeout(r, 400))]);
+        await sideEffects;
 
         console.log("[pix/criar] response enviada", { ms: Date.now() - t0 });
 
