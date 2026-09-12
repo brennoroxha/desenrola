@@ -318,13 +318,13 @@ function AdminPage() {
 
   if (!authed) {
     return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#000000", color: "#e2e8f0", fontFamily: "system-ui" }}>
-        <form onSubmit={(e) => { e.preventDefault(); load(pw, day); }} style={{ background: "#111111", padding: 24, borderRadius: 12, width: 320, border: "1px solid #333" }}>
-          <h1 style={{ margin: 0, marginBottom: 12, fontSize: 18 }}>Admin Desenrola</h1>
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f8fafc", color: "#0f172a", fontFamily: "Inter, system-ui, sans-serif" }}>
+        <form onSubmit={(e) => { e.preventDefault(); load(pw, day); }} style={{ background: "#ffffff", padding: 32, borderRadius: 16, width: 340, border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+          <h1 style={{ margin: 0, marginBottom: 16, fontSize: 20, fontWeight: 700 }}>Admin</h1>
           <input autoFocus type="password" placeholder="Senha" value={pw} onChange={(e) => setPw(e.target.value)}
-            style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #333", background: "#000", color: "#fff", fontSize: 14 }} />
-          {error && <div style={{ color: "#f87171", fontSize: 12, marginTop: 8 }}>{error}</div>}
-          <button type="submit" disabled={loading} style={{ width: "100%", marginTop: 12, padding: 10, background: "#3b82f6", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
+            style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #cbd5e1", background: "#f8fafc", color: "#0f172a", fontSize: 14, outline: "none" }} />
+          {error && <div style={{ color: "#ef4444", fontSize: 12, marginTop: 8 }}>{error}</div>}
+          <button type="submit" disabled={loading} style={{ width: "100%", marginTop: 16, padding: 12, background: "#0f172a", color: "#fff", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
@@ -333,11 +333,11 @@ function AdminPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000000", color: "#e2e8f0", fontFamily: "system-ui", display: "flex", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", color: "#0f172a", fontFamily: "Inter, system-ui, sans-serif", display: "flex", overflow: "hidden" }}>
       {/* Sidebar */}
-      <aside style={{ width: 260, background: "#111111", borderRight: "1px solid #333", display: "flex", flexDirection: "column", padding: "20px 0" }}>
-        <h1 style={{ margin: "0 20px 24px", fontSize: 20 }}>Painel Admin</h1>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "0 10px" }}>
+      <aside style={{ width: 260, background: "#ffffff", borderRight: "1px solid #e2e8f0", display: "flex", flexDirection: "column", padding: "24px 0" }}>
+        <h1 style={{ margin: "0 24px 24px", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>Painel Admin</h1>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "0 12px" }}>
           {[
             ["funnel", "Funil de Conversão"],
             ["sessions", `Sessões (${sessions.length})`],
@@ -349,23 +349,23 @@ function AdminPage() {
             ["pushcut", "Notificações (Pushcut)"]
           ].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id as any)}
-              style={{ textAlign: "left", padding: "10px 14px", background: tab === id ? "#3b82f6" : "transparent", color: tab === id ? "#fff" : "#94a3b8", border: 0, borderRadius: 6, cursor: "pointer", fontSize: 14, fontWeight: tab === id ? 600 : 400 }}>
+              style={{ textAlign: "left", padding: "10px 16px", background: tab === id ? "#f1f5f9" : "transparent", color: tab === id ? "#0f172a" : "#64748b", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: tab === id ? 600 : 500, transition: "all 0.2s" }}>
               {label}
             </button>
           ))}
         </div>
-        <div style={{ marginTop: "auto", padding: "0 20px" }}>
+        <div style={{ marginTop: "auto", padding: "0 24px" }}>
           <button onClick={() => { localStorage.removeItem("admin_pw"); setAuthed(false); }}
-            style={{ width: "100%", padding: "10px", background: "#333", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontSize: 13 }}>
+            style={{ width: "100%", padding: "10px", background: "#f1f5f9", color: "#475569", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
             Sair do Painel
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: 24, height: "100vh", overflow: "auto" }}>
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 18, color: "#fff", display: "flex", alignItems: "center", gap: 12 }}>
+      <main style={{ flex: 1, padding: 32, height: "100vh", overflow: "auto" }}>
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
+          <h2 style={{ margin: 0, fontSize: 22, color: "#0f172a", fontWeight: 700, display: "flex", alignItems: "center", gap: 12 }}>
             {tab === "funnel" ? "Funil de Conversão" :
              tab === "sessions" ? "Sessões e Visitantes" :
              tab === "origem" ? "Origem de Tráfego" :
@@ -382,39 +382,39 @@ function AdminPage() {
              )}
           </h2>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <label style={{ fontSize: 13, color: "#94a3b8" }}>Data base:</label>
+            <label style={{ fontSize: 13, color: "#64748b", fontWeight: 500 }}>Data base:</label>
             <input type="date" value={day} onChange={(e) => setDay(e.target.value)}
-              style={{ padding: 6, background: "#111", color: "#fff", border: "1px solid #333", borderRadius: 6 }} />
+              style={{ padding: "8px 12px", background: "#ffffff", color: "#0f172a", border: "1px solid #cbd5e1", borderRadius: 8, outline: "none", fontSize: 13 }} />
             <button onClick={() => load(pw, day)} disabled={loading}
-              style={{ padding: "6px 12px", background: "#3b82f6", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer" }}>
+              style={{ padding: "8px 16px", background: "#0f172a", color: "#fff", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
               {loading ? "..." : "Atualizar"}
             </button>
           </div>
         </header>
 
         {data && funnel && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
             {[
               ["Home", funnel.home], ["CPF view", funnel.cpf], ["CPF submit", funnel.cpfSubmit],
               ["Chat", funnel.chat], ["Acordo gerado", funnel.acordo],
               ["Pagamento", funnel.pagamento], ["PIX gerado", funnel.pixGerado],
               ["PIX pago", funnel.pixPago], ["Comprovante", funnel.comprovante],
             ].map(([label, v]) => (
-              <div key={label as string} style={{ background: "#111111", border: "1px solid #333", padding: 12, borderRadius: 8 }}>
-                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase" }}>{label}</div>
-                <div style={{ fontSize: 22, fontWeight: 700 }}>{v as number}</div>
+              <div key={label as string} style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: 16, borderRadius: 12, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                <div style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>{label}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginTop: 4 }}>{v as number}</div>
               </div>
             ))}
           </div>
         )}
 
         {tab === "funnel" && data && (
-          <div style={{ background: "#111111", border: "1px solid #333", padding: 16, borderRadius: 8 }}>
-            <h3 style={{ marginTop: 0 }}>Consultas de CPF hoje ({data.cpf_consultas.length})</h3>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: 24, borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            <h3 style={{ marginTop: 0, color: "#0f172a" }}>Consultas de CPF hoje ({data.cpf_consultas.length})</h3>
             <div style={{ maxHeight: 400, overflow: "auto", fontSize: 13 }}>
               {data.cpf_consultas.map((c, i) => (
-                <div key={i} style={{ padding: 6, borderBottom: "1px solid #333" }}>
-                  {c.cpf} - {c.nome || "?"} <span style={{ color: "#64748b" }}>{fmtDate(c.consultado_em)}</span>
+                <div key={i} style={{ padding: 10, borderBottom: "1px solid #f1f5f9" }}>
+                  <span style={{ fontWeight: 500, color: "#334155" }}>{c.cpf}</span> - {c.nome || "?"} <span style={{ color: "#94a3b8", marginLeft: 8 }}>{fmtDate(c.consultado_em)}</span>
                 </div>
               ))}
             </div>
@@ -422,7 +422,7 @@ function AdminPage() {
         )}
 
         {tab === "sessions" && (
-          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             {sessions.map((s) => {
               const chegou = (step: string) => s.steps.some((k) => k.endsWith(":" + step));
               const badges = [
@@ -437,28 +437,28 @@ function AdminPage() {
               ].filter(Boolean) as string[];
               
               return (
-                <div key={s.sid} style={{ padding: 12, borderBottom: "1px solid #333" }}>
+                <div key={s.sid} style={{ padding: 16, borderBottom: "1px solid #e2e8f0" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
                     onClick={() => setExpandedSid(expandedSid === s.sid ? null : s.sid)}>
                     <div>
-                      <div style={{ fontWeight: 600 }}>{s.nome || "—"} <span style={{ color: "#94a3b8", fontWeight: 400 }}>{s.cpf || ""}</span></div>
-                      <div style={{ fontSize: 12, color: "#94a3b8", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      <div style={{ fontWeight: 600, color: "#0f172a" }}>{s.nome || "—"} <span style={{ color: "#64748b", fontWeight: 400 }}>{s.cpf || ""}</span></div>
+                      <div style={{ fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
                         <span>IP {s.ip || "—"} · {fmtDate(s.first)} → {fmtDate(s.last)}</span>
                       </div>
-                      <div style={{ fontSize: 12, color: "#7dd3fc" }}>Origem: {s.origem.label} <span style={{ color: "#64748b" }}>({s.origem.detail})</span></div>
-                      <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 12, color: "#0ea5e9", marginTop: 4 }}>Origem: {s.origem.label} <span style={{ color: "#94a3b8" }}>({s.origem.detail})</span></div>
+                      <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
                         {badges.map((b) => (
-                          <span key={b} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: b === "PAGO" ? "#059669" : b === "Comprovante" ? "#f59e0b" : "#333" }}>{b}</span>
+                          <span key={b} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 12, fontWeight: 500, background: b === "PAGO" ? "#dcfce7" : b === "Comprovante" ? "#fef3c7" : "#f1f5f9", color: b === "PAGO" ? "#166534" : b === "Comprovante" ? "#92400e" : "#475569" }}>{b}</span>
                         ))}
                       </div>
                     </div>
-                    <div style={{ color: "#64748b", fontSize: 20 }}>{expandedSid === s.sid ? "▾" : "▸"}</div>
+                    <div style={{ color: "#94a3b8", fontSize: 20 }}>{expandedSid === s.sid ? "▾" : "▸"}</div>
                   </div>
                   {expandedSid === s.sid && (
-                    <div style={{ marginTop: 10, background: "#000", padding: 10, borderRadius: 6, fontSize: 12, fontFamily: "monospace" }}>
+                    <div style={{ marginTop: 12, background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", color: "#334155" }}>
                       {s.events.map((e) => (
-                        <div key={e.id} style={{ padding: "2px 0" }}>
-                          <span style={{ color: "#64748b" }}>{fmtDate(e.criado_em)}</span> · <strong>{e.page}</strong>:{e.step} {e.meta ? <span style={{ color: "#94a3b8" }}>{JSON.stringify(e.meta)}</span> : null}
+                        <div key={e.id} style={{ padding: "3px 0" }}>
+                          <span style={{ color: "#94a3b8" }}>{fmtDate(e.criado_em)}</span> · <strong>{e.page}</strong>:{e.step} {e.meta ? <span style={{ color: "#cbd5e1" }}>{JSON.stringify(e.meta)}</span> : null}
                         </div>
                       ))}
                     </div>
@@ -466,31 +466,31 @@ function AdminPage() {
                 </div>
               );
             })}
-            {sessions.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Sem sessões neste dia.</div>}
+            {sessions.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Sem sessões neste dia.</div>}
           </div>
         )}
 
         {tab === "origem" && (
-          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, overflow: "auto" }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "auto", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: "#000" }}>
+                <tr style={{ background: "#f8fafc" }}>
                   <th style={th}>Origem</th><th style={th}>Visitantes</th><th style={th}>Detalhes</th><th style={th}>Último acesso</th>
                 </tr>
               </thead>
               <tbody>
                 {origens.map((o) => (
-                  <tr key={o.label + o.detail} style={{ borderTop: "1px solid #333" }}>
-                    <td style={td}><strong>{o.label}</strong></td>
-                    <td style={td}>{o.count}</td>
-                    <td style={{ ...td, color: "#94a3b8" }}>{o.detail}</td>
-                    <td style={{ ...td, color: "#64748b" }}>{o.last ? fmtDate(o.last) : "—"}</td>
+                  <tr key={o.label + o.detail} style={{ borderTop: "1px solid #e2e8f0" }}>
+                    <td style={td}><strong style={{ color: "#0f172a" }}>{o.label}</strong></td>
+                    <td style={{ ...td, color: "#0f172a", fontWeight: 500 }}>{o.count}</td>
+                    <td style={{ ...td, color: "#64748b" }}>{o.detail}</td>
+                    <td style={{ ...td, color: "#94a3b8" }}>{o.last ? fmtDate(o.last) : "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {origens.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Sem dados de origem neste dia.</div>}
-            <div style={{ padding: 12, fontSize: 12, color: "#64748b" }}>
+            {origens.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Sem dados de origem neste dia.</div>}
+            <div style={{ padding: 16, fontSize: 12, color: "#94a3b8", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
               A origem é capturada na primeira visita da sessão (referrer, UTMs, gclid/fbclid). Sessões antigas aparecem como "Desconhecida".
             </div>
           </div>
@@ -498,25 +498,25 @@ function AdminPage() {
 
         {tab === "tx" && data && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginBottom: 16 }}>
-              <div style={{ background: "#111111", border: "1px solid #333", padding: 16, borderRadius: 8 }}>
-                <div style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase" }}>Total Gerado (PIX)</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#3b82f6" }}>{fmtBRL(txTotals.gerado)}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: 20, borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                <div style={{ fontSize: 12, color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Total Gerado (PIX)</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: "#3b82f6", marginTop: 4 }}>{fmtBRL(txTotals.gerado)}</div>
               </div>
-              <div style={{ background: "#111111", border: "1px solid #333", padding: 16, borderRadius: 8 }}>
-                <div style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase" }}>Total Pago</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#10b981" }}>{fmtBRL(txTotals.pago)}</div>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: 20, borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                <div style={{ fontSize: 12, color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Total Pago</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: "#10b981", marginTop: 4 }}>{fmtBRL(txTotals.pago)}</div>
               </div>
-              <div style={{ background: "#111111", border: "1px solid #333", padding: 16, borderRadius: 8 }}>
-                <div style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase" }}>Total Pendente</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#f59e0b" }}>{fmtBRL(txTotals.pendente)}</div>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: 20, borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                <div style={{ fontSize: 12, color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Total Pendente</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: "#f59e0b", marginTop: 4 }}>{fmtBRL(txTotals.pendente)}</div>
               </div>
             </div>
 
-            <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, overflow: "auto" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "auto", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
               <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ background: "#000" }}>
+                  <tr style={{ background: "#f8fafc" }}>
                     <th style={th}>Ação</th>
                     <th style={th}>Status</th><th style={th}>Nome</th><th style={th}>CPF</th><th style={th}>Valor</th>
                     <th style={th}>Criado</th><th style={th}>Pago em</th><th style={th}>Acordo</th><th style={th}>ID</th>
@@ -524,7 +524,7 @@ function AdminPage() {
                 </thead>
                 <tbody>
                   {data.transactions.map((t) => (
-                    <tr key={t.transaction_id} style={{ borderTop: "1px solid #333" }}>
+                    <tr key={t.transaction_id} style={{ borderTop: "1px solid #e2e8f0" }}>
                       <td style={td}>
                         <button
                           onClick={async () => {
@@ -540,74 +540,74 @@ function AdminPage() {
                               await load(pw, day);
                             } catch { alert("Falha de rede."); }
                           }}
-                          style={{ padding: "6px 12px", background: t.status === "PAID" ? "#333" : "#10b981", color: t.status === "PAID" ? "#94a3b8" : "#000", border: 0, borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}
+                          style={{ padding: "6px 12px", background: t.status === "PAID" ? "#f1f5f9" : "#10b981", color: t.status === "PAID" ? "#94a3b8" : "#fff", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}
                         >
                           {t.status === "PAID" ? "Re-marcar pago" : "✓ Marcar pago"}
                         </button>
                       </td>
-                      <td style={td}><span style={{ padding: "2px 8px", borderRadius: 10, background: t.status === "PAID" ? "#059669" : "#333", fontSize: 11 }}>{t.status}</span></td>
-                      <td style={td}>{t.nome || "—"}</td>
-                      <td style={td}>{t.cpf}</td>
-                      <td style={td}>{fmtBRL(t.amount_cents)}</td>
-                      <td style={td}>{fmtDate(t.criado_em)}</td>
-                      <td style={td}>{t.paid_at ? fmtDate(t.paid_at) : "—"}</td>
-                      <td style={td}>{t.acordo || "—"}</td>
-                      <td style={{ ...td, fontFamily: "monospace", fontSize: 11 }}>{t.transaction_id.slice(0, 12)}...</td>
+                      <td style={td}><span style={{ padding: "4px 10px", borderRadius: 12, fontWeight: 500, background: t.status === "PAID" ? "#dcfce7" : "#f1f5f9", color: t.status === "PAID" ? "#166534" : "#475569", fontSize: 11 }}>{t.status}</span></td>
+                      <td style={{ ...td, color: "#0f172a", fontWeight: 500 }}>{t.nome || "—"}</td>
+                      <td style={{ ...td, color: "#475569" }}>{t.cpf}</td>
+                      <td style={{ ...td, color: "#0f172a", fontWeight: 600 }}>{fmtBRL(t.amount_cents)}</td>
+                      <td style={{ ...td, color: "#64748b" }}>{fmtDate(t.criado_em)}</td>
+                      <td style={{ ...td, color: "#64748b" }}>{t.paid_at ? fmtDate(t.paid_at) : "—"}</td>
+                      <td style={{ ...td, color: "#475569" }}>{t.acordo || "—"}</td>
+                      <td style={{ ...td, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", fontSize: 11, color: "#94a3b8" }}>{t.transaction_id.slice(0, 12)}...</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {data.transactions.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Sem pedidos.</div>}
+              {data.transactions.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Sem pedidos.</div>}
             </div>
           </>
         )}
 
         {tab === "comp" && data && (
-          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, padding: 12 }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             {data.comprovantes.map((c) => {
               const tx = c.transaction_id ? data.transactions.find((t) => t.transaction_id === c.transaction_id) : null;
               const desvio = !tx || tx.status !== "PAID";
               return (
-                <div key={c.id} style={{ padding: 10, borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div key={c.id} style={{ padding: "12px 0", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div>
-                    <div style={{ fontWeight: 600 }}>
-                      {c.nome || "—"} <span style={{ color: "#94a3b8", fontWeight: 400 }}>{c.cpf || ""}</span>
-                      {desvio && <span style={{ marginLeft: 8, fontSize: 11, padding: "2px 8px", borderRadius: 10, background: "#dc2626" }}>DESVIO</span>}
+                    <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                      {c.nome || "—"} <span style={{ color: "#64748b", fontWeight: 400 }}>{c.cpf || ""}</span>
+                      {desvio && <span style={{ marginLeft: 8, fontSize: 11, padding: "4px 10px", borderRadius: 12, background: "#fee2e2", color: "#b91c1c", fontWeight: 500 }}>DESVIO</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
                       {c.filename} · {c.mime} · {(c.size_bytes || 0) / 1024 | 0} KB · IP {c.ip || "—"} · {fmtDate(c.criado_em)}
                     </div>
-                    <div style={{ fontSize: 12, color: "#94a3b8" }}>Acordo: {c.acordo || "—"} · TX: {c.transaction_id || "—"} · Status TX: {tx?.status || "SEM TX"}</div>
+                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Acordo: {c.acordo || "—"} · TX: {c.transaction_id || "—"} · Status TX: {tx?.status || "SEM TX"}</div>
                   </div>
                   <a href={`/api/public/admin/comprovante?id=${c.id}&pw=${encodeURIComponent(pw)}`} target="_blank" rel="noreferrer"
-                    style={{ padding: "6px 12px", background: "#3b82f6", color: "#fff", borderRadius: 6, textDecoration: "none", fontSize: 13 }}>
+                    style={{ padding: "8px 16px", background: "#f8fafc", color: "#0f172a", border: "1px solid #cbd5e1", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
                     Abrir
                   </a>
                 </div>
               );
             })}
-            {data.comprovantes.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Sem comprovantes.</div>}
+            {data.comprovantes.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Sem comprovantes.</div>}
           </div>
         )}
 
         {tab === "gateway" && (
-          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, padding: 16 }}>
-            <h3 style={{ marginTop: 0 }}>Gateway ativo</h3>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            <h3 style={{ marginTop: 0, color: "#0f172a" }}>Gateway ativo</h3>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
               {(["freepay", "blackcat"] as const).map((g) => {
                 const isActive = gwState?.active === g;
                 const p = gwState?.providers.find((x) => x.id === g);
                 return (
                   <button key={g} onClick={() => saveActive(g)} disabled={gwSaving || isActive}
-                    style={{ padding: "10px 18px", background: isActive ? "#059669" : "#333", color: "#fff", border: "1px solid #444", borderRadius: 6, cursor: isActive ? "default" : "pointer", fontWeight: 600, textTransform: "capitalize" }}>
+                    style={{ padding: "12px 20px", background: isActive ? "#dcfce7" : "#f8fafc", color: isActive ? "#166534" : "#334155", border: isActive ? "1px solid #bbf7d0" : "1px solid #cbd5e1", borderRadius: 8, cursor: isActive ? "default" : "pointer", fontWeight: 600, textTransform: "capitalize", transition: "all 0.2s" }}>
                     {g} {isActive ? "· ATIVO" : ""} {p && !p.configured ? "· sem chave" : ""}
                   </button>
                 );
               })}
             </div>
-            {gwMsg && <div style={{ padding: 8, background: "#000", border: "1px solid #333", borderRadius: 6, marginBottom: 12, fontSize: 13 }}>{gwMsg}</div>}
+            {gwMsg && <div style={{ padding: 12, background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 8, marginBottom: 24, fontSize: 13 }}>{gwMsg}</div>}
 
-            <h3>Credenciais</h3>
+            <h3 style={{ color: "#0f172a" }}>Credenciais</h3>
             {(["freepay", "blackcat"] as const).map((g) => {
               const p = gwState?.providers.find((x) => x.id === g);
               const form = credForm[g] || { public_key: "", secret_key: "" };
@@ -619,22 +619,22 @@ function AdminPage() {
                 ? "Secret / API Key (Blackcat)"
                 : "Secret Key (Freepay)";
               return (
-                <div key={g} style={{ background: "#000", border: "1px solid #333", padding: 12, borderRadius: 8, marginBottom: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div style={{ fontWeight: 600, textTransform: "capitalize" }}>{g}</div>
-                    <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                <div key={g} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: 16, borderRadius: 12, marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div style={{ fontWeight: 600, textTransform: "capitalize", color: "#0f172a" }}>{g}</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>
                       {p?.configured ? `Configurado${p.atualizado_em ? ` · ${fmtDate(p.atualizado_em)}` : ""}` : "Não configurado"}
                     </div>
                   </div>
                   <input type="text" placeholder={publicPh} value={form.public_key}
                     onChange={(e) => setCredForm((prev) => ({ ...prev, [g]: { ...form, public_key: e.target.value } }))}
-                    style={{ width: "100%", padding: 8, marginBottom: 6, borderRadius: 6, border: "1px solid #333", background: "#111", color: "#fff", fontSize: 13 }} />
+                    style={{ width: "100%", padding: 10, marginBottom: 8, borderRadius: 8, border: "1px solid #cbd5e1", background: "#ffffff", color: "#0f172a", fontSize: 13, outline: "none" }} />
                   <input type="password" placeholder={secretPh} value={form.secret_key}
                     onChange={(e) => setCredForm((prev) => ({ ...prev, [g]: { ...form, secret_key: e.target.value } }))}
-                    style={{ width: "100%", padding: 8, marginBottom: 8, borderRadius: 6, border: "1px solid #333", background: "#111", color: "#fff", fontSize: 13 }} />
+                    style={{ width: "100%", padding: 10, marginBottom: 12, borderRadius: 8, border: "1px solid #cbd5e1", background: "#ffffff", color: "#0f172a", fontSize: 13, outline: "none" }} />
 
                   <button onClick={() => saveCreds(g)} disabled={gwSaving}
-                    style={{ padding: "8px 14px", background: "#3b82f6", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontSize: 13 }}>
+                    style={{ padding: "8px 16px", background: "#0f172a", color: "#fff", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
                     {gwSaving ? "Salvando..." : "Salvar credenciais"}
                   </button>
                 </div>
@@ -644,11 +644,11 @@ function AdminPage() {
         )}
 
         {tab === "ips" && (
-          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, padding: 16 }}>
-            <h3 style={{ marginTop: 0 }}>IPs Bloqueados</h3>
-            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            <h3 style={{ marginTop: 0, color: "#0f172a" }}>IPs Bloqueados</h3>
+            <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
               <input type="text" placeholder="Adicionar IP (ex: 192.168.0.1)" value={newIp} onChange={(e) => setNewIp(e.target.value)}
-                style={{ flex: 1, padding: 8, borderRadius: 6, border: "1px solid #333", background: "#000", color: "#fff", fontSize: 14 }} />
+                style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #cbd5e1", background: "#ffffff", color: "#0f172a", fontSize: 14, outline: "none" }} />
               <button 
                 onClick={async () => {
                   if (!newIp.trim()) return;
@@ -659,67 +659,69 @@ function AdminPage() {
                   setNewIp("");
                   loadIps(pw);
                 }}
-                style={{ padding: "8px 16px", background: "#ef4444", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
+                style={{ padding: "10px 20px", background: "#ef4444", color: "#fff", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
                 Bloquear IP
               </button>
             </div>
             
-            <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#000" }}>
-                  <th style={th}>Endereço IP</th><th style={th}>Bloqueado em</th><th style={th}>Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ips.map((ip) => (
-                  <tr key={ip.ip} style={{ borderTop: "1px solid #333" }}>
-                    <td style={{ ...td, fontWeight: 600 }}>{ip.ip}</td>
-                    <td style={{ ...td, color: "#94a3b8" }}>{fmtDate(ip.criado_em)}</td>
-                    <td style={td}>
-                      <button onClick={async () => {
-                          await fetch("/api/public/admin/ips", {
-                            method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Password": pw },
-                            body: JSON.stringify({ action: "unblock", ip: ip.ip })
-                          });
-                          loadIps(pw);
-                        }}
-                        style={{ padding: "4px 8px", background: "#333", color: "#fff", border: "1px solid #444", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>
-                        Desbloquear
-                      </button>
-                    </td>
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+              <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={th}>Endereço IP</th><th style={th}>Bloqueado em</th><th style={th}>Ação</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {ips.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Nenhum IP bloqueado.</div>}
+                </thead>
+                <tbody>
+                  {ips.map((ip) => (
+                    <tr key={ip.ip} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ ...td, fontWeight: 600, color: "#0f172a" }}>{ip.ip}</td>
+                      <td style={{ ...td, color: "#64748b" }}>{fmtDate(ip.criado_em)}</td>
+                      <td style={td}>
+                        <button onClick={async () => {
+                            await fetch("/api/public/admin/ips", {
+                              method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Password": pw },
+                              body: JSON.stringify({ action: "unblock", ip: ip.ip })
+                            });
+                            loadIps(pw);
+                          }}
+                          style={{ padding: "6px 12px", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 500 }}>
+                          Desbloquear
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {ips.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Nenhum IP bloqueado.</div>}
+            </div>
           </div>
         )}
 
         {tab === "pushcut" && (
-          <div style={{ background: "#111111", border: "1px solid #333", borderRadius: 8, padding: 16 }}>
-            <h3 style={{ marginTop: 0 }}>URLs do Pushcut</h3>
-            <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            <h3 style={{ marginTop: 0, color: "#0f172a" }}>URLs do Pushcut</h3>
+            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 24 }}>
               Configure as URLs de webhook do Pushcut para receber notificações em tempo real.
             </div>
 
-            {pushcutMsg && <div style={{ padding: 8, background: "#000", border: "1px solid #333", borderRadius: 6, marginBottom: 16, fontSize: 13, color: "#fff" }}>{pushcutMsg}</div>}
+            {pushcutMsg && <div style={{ padding: 12, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, marginBottom: 24, fontSize: 13, color: "#166534" }}>{pushcutMsg}</div>}
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#94a3b8" }}>URL Pedido Gerado</label>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6, color: "#475569" }}>URL Pedido Gerado</label>
               <input type="text" placeholder="https://api.pushcut.io/..." value={pushcutUrls.gerado}
                 onChange={(e) => setPushcutUrls(prev => ({ ...prev, gerado: e.target.value }))}
-                style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #333", background: "#000", color: "#fff", fontSize: 13 }} />
+                style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #cbd5e1", background: "#ffffff", color: "#0f172a", fontSize: 13, outline: "none" }} />
             </div>
 
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#94a3b8" }}>URL Pedido Aprovado</label>
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6, color: "#475569" }}>URL Pedido Aprovado</label>
               <input type="text" placeholder="https://api.pushcut.io/..." value={pushcutUrls.aprovado}
                 onChange={(e) => setPushcutUrls(prev => ({ ...prev, aprovado: e.target.value }))}
-                style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #333", background: "#000", color: "#fff", fontSize: 13 }} />
+                style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #cbd5e1", background: "#ffffff", color: "#0f172a", fontSize: 13, outline: "none" }} />
             </div>
 
             <button onClick={savePushcut} disabled={pushcutSaving}
-              style={{ padding: "10px 18px", background: "#3b82f6", color: "#fff", border: 0, borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
+              style={{ padding: "12px 24px", background: "#0f172a", color: "#fff", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
               {pushcutSaving ? "Salvando..." : "Salvar Notificações"}
             </button>
           </div>
@@ -730,5 +732,5 @@ function AdminPage() {
   );
 }
 
-const th: React.CSSProperties = { textAlign: "left", padding: 8, fontSize: 11, textTransform: "uppercase", color: "#94a3b8" };
-const td: React.CSSProperties = { padding: 8 };
+const th: React.CSSProperties = { textAlign: "left", padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "#64748b", fontWeight: 600, letterSpacing: "0.05em" };
+const td: React.CSSProperties = { padding: "12px 16px" };
