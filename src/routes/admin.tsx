@@ -285,6 +285,19 @@ function AdminPage() {
     return list.sort((a, b) => b.last.localeCompare(a.last));
   }, [data]);
 
+  const cpfToEarliestOrigin = useMemo(() => {
+    const map = new Map<string, { key: string; time: string }>();
+    for (const s of sessions) {
+      if (!s.cpf) continue;
+      const key = `${s.origem.label}|${s.origem.detail}`;
+      const existing = map.get(s.cpf);
+      if (!existing || s.first < existing.time) {
+        map.set(s.cpf, { key, time: s.first });
+      }
+    }
+    return map;
+  }, [sessions]);
+
   const origens = useMemo(() => {
     const paidMainTicketsByCpf = new Set<string>();
     if (data) {
@@ -304,19 +317,21 @@ function AdminPage() {
       const cur = map.get(key) || { label: s.origem.label, detail: s.origem.detail, sessions: new Set<string>(), last: "", paidCpfs: new Set<string>() };
       cur.sessions.add(s.sid);
       if (s.last > cur.last) cur.last = s.last;
-      
-      const chegouPago = s.steps.some((k) => k.endsWith(":pagamento_pix_pago"));
-      const hasTxPaid = s.cpf ? paidMainTicketsByCpf.has(s.cpf) : false;
-
-      if ((chegouPago || hasTxPaid) && s.cpf) {
-        cur.paidCpfs.add(s.cpf);
-      }
       map.set(key, cur);
     }
+
+    for (const cpf of paidMainTicketsByCpf) {
+      const earliest = cpfToEarliestOrigin.get(cpf);
+      if (earliest) {
+        const cur = map.get(earliest.key);
+        if (cur) cur.paidCpfs.add(cpf);
+      }
+    }
+
     return Array.from(map.values())
       .map((o) => ({ label: o.label, detail: o.detail, count: o.sessions.size, pagos: o.paidCpfs.size, last: o.last }))
       .sort((a, b) => b.pagos - a.pagos || b.count - a.count || b.last.localeCompare(a.last));
-  }, [sessions, data]);
+  }, [sessions, data, cpfToEarliestOrigin]);
 
   const funnel = useMemo(() => {
     if (!data) return null;
