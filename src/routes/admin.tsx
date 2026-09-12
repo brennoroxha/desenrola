@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin")({
 type Ev = { id: string; session_id: string; cpf: string | null; nome: string | null; acordo: string | null; page: string; step: string; meta: any; ip: string | null; user_agent: string | null; criado_em: string };
 type Tx = { transaction_id: string; cpf: string; nome: string | null; email: string | null; phone: string | null; amount_cents: number; acordo: string | null; status: string; paid_at: string | null; criado_em: string };
 type Comp = { id: string; transaction_id: string | null; acordo: string | null; cpf: string | null; nome: string | null; filename: string | null; mime: string | null; size_bytes: number | null; ip: string | null; criado_em: string };
-type Data = { ok: boolean; range: { start: string; end: string; day: string | null }; events: Ev[]; transactions: Tx[]; comprovantes: Comp[]; cpf_consultas: { cpf: string; nome: string | null; consultado_em: string }[] };
+type Data = { ok: boolean; range: { start: string; end: string; day: string | null }; events: Ev[]; transactions: Tx[]; comprovantes: Comp[]; cpf_consultas: { cpf: string; nome: string | null; consultado_em: string; raw?: any }[] };
 
 const TZ = "America/Sao_Paulo";
 
@@ -478,7 +478,7 @@ function AdminPage() {
             <div style={{ maxHeight: 400, overflow: "auto", fontSize: 13 }}>
               {data.cpf_consultas.map((c, i) => (
                 <div key={i} style={{ padding: 10, borderBottom: "1px solid #27272a" }}>
-                  <span style={{ fontWeight: 500, color: "#d4d4d8" }}>{c.cpf}</span> - {c.nome || "?"} <span style={{ color: "#71717a", marginLeft: 8 }}>{fmtDate(c.consultado_em)}</span>
+                  <span style={{ fontWeight: 500, color: "#d4d4d8" }}>{c.cpf}</span> - {c.nome || "?"} <span style={{ color: "#71717a", marginLeft: 8 }}>{fmtDate(c.consultado_em)} - {c.raw?.api_provider || "SearchAPI"}</span>
                 </div>
               ))}
             </div>

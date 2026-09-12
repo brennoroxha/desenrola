@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/public/admin/data")({
               .gte("criado_em", startISO).lte("criado_em", endISO)
               .order("criado_em", { ascending: false }).limit(5000),
             supabaseAdmin.from("desenrola_cpf_consultas")
-              .select("cpf, nome, consultado_em")
+              .select("cpf, nome, consultado_em, raw")
               .gte("consultado_em", startISO).lte("consultado_em", endISO)
               .order("consultado_em", { ascending: false }).limit(10000),
           ]);

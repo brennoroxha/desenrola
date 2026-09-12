@@ -15,6 +15,7 @@ export const consultaResponseSchema = z.object({
   NOME_PAI: z.string().optional(),
   SEXO: z.string().optional(),
   RENDA: z.string().optional(),
+  _provider: z.string().optional(),
 });
 
 export type CpfData = z.infer<typeof consultaResponseSchema>;
@@ -69,6 +70,7 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
       }
 
       if (item) {
+        item._provider = "SearchAPI";
         console.log(`[executeCpfLookup] Success with token ${token}`);
         return consultaResponseSchema.parse(item);
       }
@@ -101,7 +103,8 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
           NASC: fallbackJson.data.dataNascimento,
           NOME_MAE: fallbackJson.data.nomeMae,
           NOME_PAI: fallbackJson.data.nomePai,
-          SEXO: fallbackJson.data.sexo
+          SEXO: fallbackJson.data.sexo,
+          _provider: "Athenas Buscas"
         };
         return consultaResponseSchema.parse(item);
       }

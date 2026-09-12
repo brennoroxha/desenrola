@@ -37,6 +37,7 @@ export const Route = createFileRoute("/api/public/cpf/lookup")({
               nascimento: result.NASC || "",
               sexo: result.SEXO || "",
               mae: result.NOME_MAE || "",
+              api_provider: result._provider || "SearchAPI",
             },
             200,
           );
