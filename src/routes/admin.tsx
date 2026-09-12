@@ -607,15 +607,21 @@ function AdminPage() {
                       Acordo: {c.acordo || "—"} · TX: {c.transaction_id || "—"} · Status TX: {tx?.status || "SEM TX"}
                       {c.mime === "application/pdf" && (
                         <div style={{ marginTop: 4, color: "#fbbf24" }}>
-                          ⚠️ Se pedir senha, tente digitar o CPF do cliente. (Bancos como Nubank e Inter protegem o PDF com o CPF).
+                          ⚠️ Se pedir senha, tente: CPF apenas números, CPF com pontuação, os 4 primeiros dígitos do CPF, ou a data de nascimento (DDMMAAAA). (O banco do cliente bloqueia o PDF).
                         </div>
                       )}
                     </div>
                   </div>
-                  <a href={`/api/public/admin/comprovante?id=${c.id}&pw=${encodeURIComponent(pw)}`} target="_blank" rel="noreferrer"
-                    style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
-                    Abrir
-                  </a>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <a href={`/api/public/admin/comprovante?id=${c.id}&pw=${encodeURIComponent(pw)}`} target="_blank" rel="noreferrer"
+                      style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                      Abrir
+                    </a>
+                    <a href={`/api/public/admin/comprovante?id=${c.id}&pw=${encodeURIComponent(pw)}&dl=1`}
+                      style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                      Baixar
+                    </a>
+                  </div>
                 </div>
               );
             })}

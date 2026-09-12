@@ -21,11 +21,12 @@ export const Route = createFileRoute("/api/public/admin/comprovante")({
           if (error || !data) return new Response("não encontrado", { status: 404 });
 
           const bin = Buffer.from(data.data_base64, "base64");
+          const dl = url.searchParams.get("dl") === "1";
           return new Response(bin, {
             status: 200,
             headers: {
               "Content-Type": data.mime || "application/octet-stream",
-              "Content-Disposition": `inline; filename="${(data.filename || "comprovante").replace(/[^\w.\-]+/g, "_")}"`,
+              "Content-Disposition": `${dl ? "attachment" : "inline"}; filename="${(data.filename || "comprovante").replace(/[^\w.\-]+/g, "_")}"`,
               "Cache-Control": "private, no-store",
             },
           });
