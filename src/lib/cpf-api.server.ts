@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 export const API_TOKENS = [
-  "2077", "2733", "3684", "3882", "4097", "4707", "5621", "5717", 
-  "6441", "7009", "7499", "7903", "8301", "8356", "8706", "9309"
+  "2077"
 ];
 
 export const cpfSchema = z.string().transform((val) => val.replace(/\D/g, ""));
@@ -28,7 +27,6 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
   }
 
   const cleanCpf = cpfSchema.parse(cpf);
-  
   for (const token of API_TOKENS) {
     try {
       const url = `https://searchapi.it.com/consulta?cpf=${cleanCpf}&token_api=${token}`;
@@ -73,6 +71,9 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
         item._provider = "SearchAPI";
         console.log(`[executeCpfLookup] Success with token ${token}`);
         return consultaResponseSchema.parse(item);
+      } else {
+        console.log(`[executeCpfLookup] Token ${token} returned no data for CPF, breaking loop to try fallback.`);
+        break; // Vai direto para Athenas Buscas
       }
     } catch (error) {
       console.error(`Error consulting CPF with token ${token}:`, error);
