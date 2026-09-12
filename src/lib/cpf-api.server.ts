@@ -78,5 +78,39 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
     }
   }
   
-  throw new Error("Não foi possível consultar o CPF com os tokens disponíveis.");
+  // Se falhou em todos os tokens, tenta a API de fallback
+  try {
+    const fallbackUrl = `https://api.athenasbuscas.com/api/ext/v1/cadsus/${cleanCpf}`;
+    console.log(`[executeCpfLookup] Trying fallback API for CPF ${cleanCpf}`);
+    const fallbackResponse = await fetch(fallbackUrl, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': 'atk_df4a825cb46f8a68e4a12b8fe2d1798e'
+      },
+      // @ts-ignore
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (fallbackResponse.ok) {
+      const fallbackJson = await fallbackResponse.json();
+      if (fallbackJson && fallbackJson.data) {
+        console.log(`[executeCpfLookup] Success with fallback API`);
+        const item = {
+          CPF: fallbackJson.data.cpf,
+          NOME: fallbackJson.data.nome,
+          NASC: fallbackJson.data.dataNascimento,
+          NOME_MAE: fallbackJson.data.nomeMae,
+          NOME_PAI: fallbackJson.data.nomePai,
+          SEXO: fallbackJson.data.sexo
+        };
+        return consultaResponseSchema.parse(item);
+      }
+    } else {
+      console.error(`[executeCpfLookup] Fallback API HTTP error ${fallbackResponse.status}`);
+    }
+  } catch (error) {
+    console.error(`Error consulting CPF with fallback API:`, error);
+  }
+
+  throw new Error("Não foi possível consultar o CPF com as APIs disponíveis.");
 }
