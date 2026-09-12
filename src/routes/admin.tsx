@@ -36,6 +36,7 @@ function describeOrigem(raw: any): OrigemInfo {
   if (utmCampaign) detailParts.push(`campanha: ${utmCampaign}`);
   if (utmMedium) detailParts.push(`mídia: ${utmMedium}`);
   if (refHost) detailParts.push(`referrer: ${refHost}`);
+  if (raw.conta) detailParts.push(`conta: ${str(raw.conta)}`);
   if (raw.landing) detailParts.push(`entrou em: ${str(raw.landing)}`);
   const detail = detailParts.join(" · ") || "—";
 
