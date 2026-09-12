@@ -285,14 +285,17 @@ function AdminPage() {
     return list.sort((a, b) => b.last.localeCompare(a.last));
   }, [data]);
 
+  const normalizeCpf = (cpf: string | null) => String(cpf || "").replace(/\D/g, "");
+
   const cpfToEarliestOrigin = useMemo(() => {
     const map = new Map<string, { key: string; time: string }>();
     for (const s of sessions) {
       if (!s.cpf) continue;
+      const clean = normalizeCpf(s.cpf);
       const key = `${s.origem.label}|${s.origem.detail}`;
-      const existing = map.get(s.cpf);
+      const existing = map.get(clean);
       if (!existing || s.first < existing.time) {
-        map.set(s.cpf, { key, time: s.first });
+        map.set(clean, { key, time: s.first });
       }
     }
     return map;
@@ -305,7 +308,7 @@ function AdminPage() {
         if (t.status === "PAID") {
           const ac = (t.acordo || "").toUpperCase();
           if (!ac.includes("TAXA") && !ac.includes("SCORE") && !ac.includes("IMPOSTO") && !ac.includes("UPSELL")) {
-            paidMainTicketsByCpf.add(t.cpf);
+            paidMainTicketsByCpf.add(normalizeCpf(t.cpf));
           }
         }
       }
@@ -320,12 +323,23 @@ function AdminPage() {
       map.set(key, cur);
     }
 
+    const unknownPaidCpfs = new Set<string>();
+
     for (const cpf of paidMainTicketsByCpf) {
       const earliest = cpfToEarliestOrigin.get(cpf);
       if (earliest) {
         const cur = map.get(earliest.key);
         if (cur) cur.paidCpfs.add(cpf);
+      } else {
+        unknownPaidCpfs.add(cpf);
       }
+    }
+
+    if (unknownPaidCpfs.size > 0) {
+      const key = "Desconhecida|sem rastreio (bloqueador de anúncios ou webhook)";
+      const cur = map.get(key) || { label: "Desconhecida", detail: "sem rastreio (bloqueador de anúncios ou webhook)", sessions: new Set<string>(), last: "", paidCpfs: new Set<string>() };
+      for (const cpf of unknownPaidCpfs) cur.paidCpfs.add(cpf);
+      map.set(key, cur);
     }
 
     return Array.from(map.values())
