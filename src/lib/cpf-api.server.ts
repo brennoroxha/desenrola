@@ -30,12 +30,50 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
   }
 
   const cleanCpf = cpfSchema.parse(cpf);
+  // 1. TENTA PRIMEIRO A API ATHENAS BUSCAS
+  const athenasKey = (typeof process !== "undefined" && process.env.ATHENAS_API_KEY) ? process.env.ATHENAS_API_KEY : '';
+  
+  try {
+    const athenasUrl = `https://api.athenasbuscas.com/api/ext/v1/cadsus/${cleanCpf}`;
+    console.log(`[executeCpfLookup] Trying PRIMARY API Athenas for CPF ${cleanCpf}`);
+    const athenasResponse = await fetch(athenasUrl, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': athenasKey
+      },
+      // @ts-ignore
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (athenasResponse.ok) {
+      const athenasJson = await athenasResponse.json();
+      if (athenasJson && athenasJson.data) {
+        console.log(`[executeCpfLookup] Success with PRIMARY API Athenas`);
+        const item = {
+          CPF: athenasJson.data.cpf,
+          NOME: athenasJson.data.nome,
+          NASC: athenasJson.data.dataNascimento,
+          NOME_MAE: athenasJson.data.nomeMae,
+          NOME_PAI: athenasJson.data.nomePai,
+          SEXO: athenasJson.data.sexo,
+          _provider: "Athenas Buscas"
+        };
+        return consultaResponseSchema.parse(item);
+      }
+    } else {
+      console.error(`[executeCpfLookup] PRIMARY API Athenas HTTP error ${athenasResponse.status}, falling back to SearchAPI`);
+    }
+  } catch (error) {
+    console.error(`Error consulting CPF with PRIMARY API Athenas:`, error);
+  }
+
+  // 2. SE ATHENAS FALHAR, TENTA A SEARCH API COMO FALLBACK
   const tokens = getApiTokens();
   
   for (const token of tokens) {
     try {
       const url = `https://searchapi.it.com/consulta?cpf=${cleanCpf}&token_api=${token}`;
-      console.log(`[executeCpfLookup] Trying token ${token} for CPF ${cleanCpf}`);
+      console.log(`[executeCpfLookup] Trying fallback token ${token} for CPF ${cleanCpf}`);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -50,10 +88,10 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
       });
       
       const responseText = await response.text();
-      console.log(`[executeCpfLookup] Token ${token} status ${response.status} response prefix:`, responseText.substring(0, 150));
+      console.log(`[executeCpfLookup] Fallback Token ${token} status ${response.status} response prefix:`, responseText.substring(0, 150));
 
       if (!response.ok) {
-        console.error(`[executeCpfLookup] Token ${token} HTTP error ${response.status}`);
+        console.error(`[executeCpfLookup] Fallback Token ${token} HTTP error ${response.status}`);
         continue;
       }
 
@@ -61,7 +99,7 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
       try {
         json = JSON.parse(responseText);
       } catch (e) {
-        console.error(`[executeCpfLookup] Token ${token} JSON parse error`);
+        console.error(`[executeCpfLookup] Fallback Token ${token} JSON parse error`);
         continue;
       }
       
@@ -74,53 +112,16 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
 
       if (item) {
         item._provider = "SearchAPI";
-        console.log(`[executeCpfLookup] Success with token ${token}`);
+        console.log(`[executeCpfLookup] Success with fallback token ${token}`);
         return consultaResponseSchema.parse(item);
       } else {
-        console.log(`[executeCpfLookup] Token ${token} returned no data for CPF, breaking loop to try fallback.`);
-        break; // Vai direto para Athenas Buscas
+        console.log(`[executeCpfLookup] Fallback Token ${token} returned no data for CPF, breaking loop.`);
+        break; // Nao tenta outros tokens, já que respondeu 200 e nao encontrou dados
       }
     } catch (error) {
-      console.error(`Error consulting CPF with token ${token}:`, error);
+      console.error(`Error consulting CPF with fallback token ${token}:`, error);
       continue;
     }
-  }
-  
-  // Se falhou em todos os tokens, tenta a API de fallback
-  const athenasKey = (typeof process !== "undefined" && process.env.ATHENAS_API_KEY) ? process.env.ATHENAS_API_KEY : '';
-  
-  try {
-    const fallbackUrl = `https://api.athenasbuscas.com/api/ext/v1/cadsus/${cleanCpf}`;
-    console.log(`[executeCpfLookup] Trying fallback API for CPF ${cleanCpf}`);
-    const fallbackResponse = await fetch(fallbackUrl, {
-      method: 'GET',
-      headers: {
-        'X-API-Key': athenasKey
-      },
-      // @ts-ignore
-      signal: AbortSignal.timeout(10000)
-    });
-
-    if (fallbackResponse.ok) {
-      const fallbackJson = await fallbackResponse.json();
-      if (fallbackJson && fallbackJson.data) {
-        console.log(`[executeCpfLookup] Success with fallback API`);
-        const item = {
-          CPF: fallbackJson.data.cpf,
-          NOME: fallbackJson.data.nome,
-          NASC: fallbackJson.data.dataNascimento,
-          NOME_MAE: fallbackJson.data.nomeMae,
-          NOME_PAI: fallbackJson.data.nomePai,
-          SEXO: fallbackJson.data.sexo,
-          _provider: "Athenas Buscas"
-        };
-        return consultaResponseSchema.parse(item);
-      }
-    } else {
-      console.error(`[executeCpfLookup] Fallback API HTTP error ${fallbackResponse.status}`);
-    }
-  } catch (error) {
-    console.error(`Error consulting CPF with fallback API:`, error);
   }
 
   throw new Error("Não foi possível consultar o CPF com as APIs disponíveis.");
