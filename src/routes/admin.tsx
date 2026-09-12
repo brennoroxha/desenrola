@@ -285,67 +285,19 @@ function AdminPage() {
     return list.sort((a, b) => b.last.localeCompare(a.last));
   }, [data]);
 
-  const normalizeCpf = (cpf: string | null) => String(cpf || "").replace(/\D/g, "");
-
-  const cpfToEarliestOrigin = useMemo(() => {
-    const map = new Map<string, { key: string; time: string }>();
-    for (const s of sessions) {
-      if (!s.cpf) continue;
-      const clean = normalizeCpf(s.cpf);
-      const key = `${s.origem.label}|${s.origem.detail}`;
-      const existing = map.get(clean);
-      if (!existing || s.first < existing.time) {
-        map.set(clean, { key, time: s.first });
-      }
-    }
-    return map;
-  }, [sessions]);
-
   const origens = useMemo(() => {
-    const paidMainTicketsByCpf = new Set<string>();
-    if (data) {
-      for (const t of data.transactions) {
-        if (t.status === "PAID") {
-          const ac = (t.acordo || "").toUpperCase();
-          if (!ac.includes("TAXA") && !ac.includes("SCORE") && !ac.includes("IMPOSTO") && !ac.includes("UPSELL")) {
-            paidMainTicketsByCpf.add(normalizeCpf(t.cpf));
-          }
-        }
-      }
-    }
-
-    const map = new Map<string, { label: string; detail: string; sessions: Set<string>; last: string; paidCpfs: Set<string> }>();
+    const map = new Map<string, { label: string; detail: string; sessions: Set<string>; last: string }>();
     for (const s of sessions) {
       const key = `${s.origem.label}|${s.origem.detail}`;
-      const cur = map.get(key) || { label: s.origem.label, detail: s.origem.detail, sessions: new Set<string>(), last: "", paidCpfs: new Set<string>() };
+      const cur = map.get(key) || { label: s.origem.label, detail: s.origem.detail, sessions: new Set<string>(), last: "" };
       cur.sessions.add(s.sid);
       if (s.last > cur.last) cur.last = s.last;
       map.set(key, cur);
     }
-
-    const unknownPaidCpfs = new Set<string>();
-
-    for (const cpf of paidMainTicketsByCpf) {
-      const earliest = cpfToEarliestOrigin.get(cpf);
-      if (earliest) {
-        const cur = map.get(earliest.key);
-        if (cur) cur.paidCpfs.add(cpf);
-      } else {
-        unknownPaidCpfs.add(cpf);
-      }
-    }
-
-    if (unknownPaidCpfs.size > 0) {
-      const key = "Desconhecida|sem rastreio (bloqueador de anúncios ou webhook)";
-      const cur = map.get(key) || { label: "Desconhecida", detail: "sem rastreio (bloqueador de anúncios ou webhook)", sessions: new Set<string>(), last: "", paidCpfs: new Set<string>() };
-      for (const cpf of unknownPaidCpfs) cur.paidCpfs.add(cpf);
-      map.set(key, cur);
-    }
-
     return Array.from(map.values())
-      .map((o) => ({ label: o.label, detail: o.detail, count: o.sessions.size, pagos: o.paidCpfs.size, last: o.last }))
-      .sort((a, b) => b.pagos - a.pagos || b.count - a.count || b.last.localeCompare(a.last));
-  }, [sessions, data, cpfToEarliestOrigin]);
+      .map((o) => ({ label: o.label, detail: o.detail, count: o.sessions.size, last: o.last }))
+      .sort((a, b) => b.count - a.count || b.last.localeCompare(a.last));
+  }, [sessions]);
 
   const funnel = useMemo(() => {
     if (!data) return null;
@@ -549,7 +501,7 @@ function AdminPage() {
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#09090b" }}>
-                  <th style={th}>Origem</th><th style={th}>Visitantes</th><th style={th}>Pedidos Pagos</th><th style={th}>Detalhes</th><th style={th}>Último acesso</th>
+                  <th style={th}>Origem</th><th style={th}>Visitantes</th><th style={th}>Detalhes</th><th style={th}>Último acesso</th>
                 </tr>
               </thead>
               <tbody>
@@ -557,7 +509,6 @@ function AdminPage() {
                   <tr key={o.label + o.detail} style={{ borderTop: "1px solid #27272a" }}>
                     <td style={td}><strong style={{ color: "#fafafa" }}>{o.label}</strong></td>
                     <td style={{ ...td, color: "#fafafa", fontWeight: 500 }}>{o.count}</td>
-                    <td style={{ ...td, color: o.pagos > 0 ? "#34d399" : "#71717a", fontWeight: 600 }}>{o.pagos > 0 ? o.pagos : "—"}</td>
                     <td style={{ ...td, color: "#a1a1aa" }}>{o.detail}</td>
                     <td style={{ ...td, color: "#71717a" }}>{o.last ? fmtDate(o.last) : "—"}</td>
                   </tr>
