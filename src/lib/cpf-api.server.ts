@@ -7,6 +7,19 @@ export function getApiTokens(): string[] {
   return ["2077"]; // Fallback de segurança local
 }
 
+function formatName(str?: string): string {
+  if (!str) return "";
+  const lowers = ["da", "de", "do", "das", "dos", "e"];
+  return str
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, index) => {
+      if (index !== 0 && lowers.includes(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
 export const cpfSchema = z.string().transform((val) => val.replace(/\D/g, ""));
 
 export const consultaResponseSchema = z.object({
@@ -51,10 +64,10 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
         console.log(`[executeCpfLookup] Success with PRIMARY API Athenas`);
         const item = {
           CPF: athenasJson.data.cpf,
-          NOME: athenasJson.data.nome,
+          NOME: formatName(athenasJson.data.nome),
           NASC: athenasJson.data.dataNascimento,
-          NOME_MAE: athenasJson.data.nomeMae,
-          NOME_PAI: athenasJson.data.nomePai,
+          NOME_MAE: formatName(athenasJson.data.nomeMae),
+          NOME_PAI: formatName(athenasJson.data.nomePai),
           SEXO: athenasJson.data.sexo,
           _provider: "Athenas Buscas"
         };
@@ -112,6 +125,9 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
 
       if (item) {
         item._provider = "SearchAPI";
+        if (item.NOME) item.NOME = formatName(item.NOME);
+        if (item.NOME_MAE) item.NOME_MAE = formatName(item.NOME_MAE);
+        if (item.NOME_PAI) item.NOME_PAI = formatName(item.NOME_PAI);
         console.log(`[executeCpfLookup] Success with fallback token ${token}`);
         return consultaResponseSchema.parse(item);
       } else {
