@@ -286,23 +286,37 @@ function AdminPage() {
   }, [data]);
 
   const origens = useMemo(() => {
-    const map = new Map<string, { label: string; detail: string; sessions: Set<string>; last: string; pagos: number }>();
+    const paidMainTicketsByCpf = new Set<string>();
+    if (data) {
+      for (const t of data.transactions) {
+        if (t.status === "PAID") {
+          const ac = (t.acordo || "").toUpperCase();
+          if (!ac.includes("TAXA") && !ac.includes("SCORE") && !ac.includes("IMPOSTO") && !ac.includes("UPSELL")) {
+            paidMainTicketsByCpf.add(t.cpf);
+          }
+        }
+      }
+    }
+
+    const map = new Map<string, { label: string; detail: string; sessions: Set<string>; last: string; paidCpfs: Set<string> }>();
     for (const s of sessions) {
       const key = `${s.origem.label}|${s.origem.detail}`;
-      const cur = map.get(key) || { label: s.origem.label, detail: s.origem.detail, sessions: new Set<string>(), last: "", pagos: 0 };
+      const cur = map.get(key) || { label: s.origem.label, detail: s.origem.detail, sessions: new Set<string>(), last: "", paidCpfs: new Set<string>() };
       cur.sessions.add(s.sid);
       if (s.last > cur.last) cur.last = s.last;
       
       const chegouPago = s.steps.some((k) => k.endsWith(":pagamento_pix_pago"));
-      if (chegouPago) {
-        cur.pagos++;
+      const hasTxPaid = s.cpf ? paidMainTicketsByCpf.has(s.cpf) : false;
+
+      if ((chegouPago || hasTxPaid) && s.cpf) {
+        cur.paidCpfs.add(s.cpf);
       }
       map.set(key, cur);
     }
     return Array.from(map.values())
-      .map((o) => ({ label: o.label, detail: o.detail, count: o.sessions.size, pagos: o.pagos, last: o.last }))
+      .map((o) => ({ label: o.label, detail: o.detail, count: o.sessions.size, pagos: o.paidCpfs.size, last: o.last }))
       .sort((a, b) => b.pagos - a.pagos || b.count - a.count || b.last.localeCompare(a.last));
-  }, [sessions]);
+  }, [sessions, data]);
 
   const funnel = useMemo(() => {
     if (!data) return null;
