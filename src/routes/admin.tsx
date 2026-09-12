@@ -603,7 +603,14 @@ function AdminPage() {
                     <div style={{ fontSize: 12, color: "#a1a1aa", marginTop: 4 }}>
                       {c.filename} · {c.mime} · {(c.size_bytes || 0) / 1024 | 0} KB · IP {c.ip || "—"} · {fmtDate(c.criado_em)}
                     </div>
-                    <div style={{ fontSize: 12, color: "#71717a", marginTop: 2 }}>Acordo: {c.acordo || "—"} · TX: {c.transaction_id || "—"} · Status TX: {tx?.status || "SEM TX"}</div>
+                    <div style={{ fontSize: 12, color: "#71717a", marginTop: 2 }}>
+                      Acordo: {c.acordo || "—"} · TX: {c.transaction_id || "—"} · Status TX: {tx?.status || "SEM TX"}
+                      {c.mime === "application/pdf" && (
+                        <div style={{ marginTop: 4, color: "#fbbf24" }}>
+                          ⚠️ Se pedir senha, tente digitar o CPF do cliente. (Bancos como Nubank e Inter protegem o PDF com o CPF).
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <a href={`/api/public/admin/comprovante?id=${c.id}&pw=${encodeURIComponent(pw)}`} target="_blank" rel="noreferrer"
                     style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
