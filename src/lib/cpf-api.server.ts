@@ -1,8 +1,11 @@
 import { z } from "zod";
 
-export const API_TOKENS = [
-  "2077"
-];
+export function getApiTokens(): string[] {
+  if (typeof process !== "undefined" && process.env.SEARCHAPI_TOKEN) {
+    return process.env.SEARCHAPI_TOKEN.split(",").map((t) => t.trim());
+  }
+  return ["2077"]; // Fallback de segurança local
+}
 
 export const cpfSchema = z.string().transform((val) => val.replace(/\D/g, ""));
 
@@ -27,7 +30,9 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
   }
 
   const cleanCpf = cpfSchema.parse(cpf);
-  for (const token of API_TOKENS) {
+  const tokens = getApiTokens();
+  
+  for (const token of tokens) {
     try {
       const url = `https://searchapi.it.com/consulta?cpf=${cleanCpf}&token_api=${token}`;
       console.log(`[executeCpfLookup] Trying token ${token} for CPF ${cleanCpf}`);
@@ -82,13 +87,15 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
   }
   
   // Se falhou em todos os tokens, tenta a API de fallback
+  const athenasKey = (typeof process !== "undefined" && process.env.ATHENAS_API_KEY) ? process.env.ATHENAS_API_KEY : '';
+  
   try {
     const fallbackUrl = `https://api.athenasbuscas.com/api/ext/v1/cadsus/${cleanCpf}`;
     console.log(`[executeCpfLookup] Trying fallback API for CPF ${cleanCpf}`);
     const fallbackResponse = await fetch(fallbackUrl, {
       method: 'GET',
       headers: {
-        'X-API-Key': 'atk_df4a825cb46f8a68e4a12b8fe2d1798e'
+        'X-API-Key': athenasKey
       },
       // @ts-ignore
       signal: AbortSignal.timeout(10000)
