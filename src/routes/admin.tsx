@@ -321,6 +321,15 @@ function AdminPage() {
   const funnel = useMemo(() => {
     if (!data) return null;
     const cnt = (step: string) => new Set(data.events.filter((e) => e.step === step).map((e) => e.session_id)).size;
+    
+    const mainTxs = data.transactions.filter((t) => {
+      const ac = (t.acordo || "").toUpperCase();
+      return !ac.includes("TAXA") && !ac.includes("SCORE") && !ac.includes("IMPOSTO") && !ac.includes("UPSELL");
+    });
+    const pixGeradosBanco = new Set(mainTxs.map(t => t.cpf)).size;
+    const pixPagosBanco = new Set(mainTxs.filter(t => t.status === "PAID").map(t => t.cpf)).size;
+    const comprovantesBanco = new Set(data.comprovantes.map(c => c.cpf || c.transaction_id || c.id)).size;
+
     return {
       home: cnt("home_view"),
       cpf: cnt("cpf_view"),
@@ -328,9 +337,9 @@ function AdminPage() {
       chat: cnt("chat_view"),
       acordo: cnt("chat_acordo_gerado"),
       pagamento: cnt("pagamento_view"),
-      pixGerado: cnt("pagamento_pix_gerado"),
-      pixPago: cnt("pagamento_pix_pago"),
-      comprovante: cnt("pagamento_comprovante_upload"),
+      pixGerado: Math.max(cnt("pagamento_pix_gerado"), pixGeradosBanco),
+      pixPago: Math.max(cnt("pagamento_pix_pago"), pixPagosBanco),
+      comprovante: Math.max(cnt("pagamento_comprovante_upload"), comprovantesBanco),
     };
   }, [data]);
 

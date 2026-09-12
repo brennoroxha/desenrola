@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
+import { track } from "@/lib/tracking";
 
 export const Route = createFileRoute("/")({
   component: Homepage,
@@ -62,6 +63,7 @@ function Homepage() {
   const captchaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    track("home", "home_view");
     document.title = CONFIG.content.pageTitle;
     let metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
