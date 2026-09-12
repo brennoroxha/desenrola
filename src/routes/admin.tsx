@@ -87,7 +87,7 @@ function AdminPage() {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"funnel" | "sessions" | "origem" | "tx" | "comp" | "gateway" | "ips" | "pushcut">("funnel");
+  const [tab, setTab] = useState<"funnel" | "sessions" | "origem" | "conta" | "tx" | "comp" | "gateway" | "ips" | "pushcut">("funnel");
   const [pushcutUrls, setPushcutUrls] = useState({ gerado: "", aprovado: "" });
   const [pushcutMsg, setPushcutMsg] = useState("");
   const [pushcutSaving, setPushcutSaving] = useState(false);
@@ -278,6 +278,7 @@ function AdminPage() {
         acordo: withAcordo?.acordo || null,
         ip: sorted[0]?.ip || null,
         origem: describeOrigem(rawOrigem),
+        conta: rawOrigem?.conta ? str(rawOrigem.conta) : null,
         first: sorted[0]?.criado_em || "",
         last: sorted[sorted.length - 1]?.criado_em || "",
         steps: sorted.map((e) => `${e.page}:${e.step}`),
@@ -285,6 +286,41 @@ function AdminPage() {
     });
     return list.sort((a, b) => b.last.localeCompare(a.last));
   }, [data]);
+
+  const normalizeCpf = (cpf: string | null) => String(cpf || "").replace(/\D/g, "");
+
+  const cpfToEarliestConta = useMemo(() => {
+    const map = new Map<string, { conta: string; time: string }>();
+    for (const s of sessions) {
+      if (!s.cpf || !s.conta) continue;
+      const clean = normalizeCpf(s.cpf);
+      const existing = map.get(clean);
+      if (!existing || s.first < existing.time) {
+        map.set(clean, { conta: s.conta, time: s.first });
+      }
+    }
+    return map;
+  }, [sessions]);
+
+  const contas = useMemo(() => {
+    const map = new Map<string, { id: string; pagas: number; pendentes: number }>();
+    if (data) {
+      for (const t of data.transactions) {
+        const ac = (t.acordo || "").toUpperCase();
+        if (ac.includes("TAXA") || ac.includes("SCORE") || ac.includes("IMPOSTO") || ac.includes("UPSELL")) continue;
+        
+        const clean = normalizeCpf(t.cpf);
+        const earliest = cpfToEarliestConta.get(clean);
+        const contaId = earliest ? earliest.conta : "Desconhecida";
+        
+        const cur = map.get(contaId) || { id: contaId, pagas: 0, pendentes: 0 };
+        if (t.status === "PAID") cur.pagas++;
+        else if (t.status === "PENDING") cur.pendentes++;
+        map.set(contaId, cur);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.pagas - a.pagas || b.pendentes - a.pendentes);
+  }, [data, cpfToEarliestConta]);
 
   const origens = useMemo(() => {
     const map = new Map<string, { label: string; detail: string; sessions: Set<string>; last: string }>();
@@ -360,6 +396,7 @@ function AdminPage() {
             ["funnel", "Funil de Conversão"],
             ["sessions", `Sessões (${sessions.length})`],
             ["origem", `Origem de Tráfego (${origens.length})`],
+            ["conta", `Vendas por Conta (${contas.length})`],
             ["tx", `Pedidos (${data?.transactions.length || 0})`],
             ["comp", `Comprovantes (${data?.comprovantes.length || 0})`],
             ["gateway", `Gateway de Pagamento`],
@@ -519,6 +556,31 @@ function AdminPage() {
             {origens.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem dados de origem neste dia.</div>}
             <div style={{ padding: 16, fontSize: 12, color: "#71717a", borderTop: "1px solid #27272a", background: "#09090b" }}>
               A origem é capturada na primeira visita da sessão (referrer, UTMs, gclid/fbclid). Sessões antigas aparecem como "Desconhecida".
+            </div>
+          </div>
+        )}
+
+        {tab === "conta" && (
+          <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, overflow: "auto" }}>
+            <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#09090b" }}>
+                  <th style={th}>Conta (Google Ads)</th><th style={th}>Vendas Pagas</th><th style={th}>Vendas Pendentes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contas.map((c) => (
+                  <tr key={c.id} style={{ borderTop: "1px solid #27272a" }}>
+                    <td style={td}><strong style={{ color: "#fafafa" }}>{c.id}</strong></td>
+                    <td style={{ ...td, color: c.pagas > 0 ? "#34d399" : "#71717a", fontWeight: 600 }}>{c.pagas}</td>
+                    <td style={{ ...td, color: c.pendentes > 0 ? "#fbbf24" : "#71717a", fontWeight: 600 }}>{c.pendentes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {contas.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem vendas contabilizadas.</div>}
+            <div style={{ padding: 16, fontSize: 12, color: "#71717a", borderTop: "1px solid #27272a", background: "#09090b" }}>
+              Os pedidos são atribuídos à conta original do cliente ignorando upsells. Transações sem conta mapeada caem em "Desconhecida".
             </div>
           </div>
         )}
