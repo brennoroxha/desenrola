@@ -20,6 +20,12 @@ export const consultaResponseSchema = z.object({
 export type CpfData = z.infer<typeof consultaResponseSchema>;
 
 export async function executeCpfLookup(cpf: string): Promise<CpfData> {
+  // Ignora verificação SSL (útil caso o certificado do site expire ou seja marcado como inválido localmente)
+  // @ts-ignore
+  if (typeof process !== "undefined" && process.env) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
+
   const cleanCpf = cpfSchema.parse(cpf);
   
   for (const token of API_TOKENS) {
