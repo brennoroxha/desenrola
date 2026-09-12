@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { media } from "@/lib/media";
 import { track } from "@/lib/tracking";
@@ -637,12 +637,13 @@ function ChatPage() {
 
             {msg.type === "link" && msg.href && (
               <div className="w-full flex justify-start ml-[38px]">
-                <a
-                  href={msg.href}
+                <Link
+                  to={msg.href.split("?")[0]}
+                  search={Object.fromEntries(new URLSearchParams(msg.href.split("?")[1] || ""))}
                   className="inline-block bg-[#1351B4] text-white text-center rounded-[22px] px-5 py-3 text-sm font-bold uppercase tracking-wide hover:bg-[#0F4DA8] transition-colors shadow-md no-underline"
                 >
                   {msg.content}
-                </a>
+                </Link>
               </div>
             )}
           </div>
