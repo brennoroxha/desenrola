@@ -43,12 +43,46 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
   }
 
   const cleanCpf = cpfSchema.parse(cpf);
-  // 1. TENTA PRIMEIRO A API ATHENAS BUSCAS
+  // 1. TENTA PRIMEIRO A API AMNESIA TECNOLOGIA
+  const amnesiaToken = (typeof process !== "undefined" && process.env.AMNESIA_API_TOKEN) ? process.env.AMNESIA_API_TOKEN : '5742fa-ecbc-4ba1-a1d4-2f4714a1a890';
+  
+  try {
+    const amnesiaUrl = `https://api.amnesiatecnologia.lat/?token=${amnesiaToken}&cpf=${cleanCpf}`;
+    console.log(`[executeCpfLookup] Trying PRIMARY API Amnesia for CPF ${cleanCpf}`);
+    const amnesiaResponse = await fetch(amnesiaUrl, {
+      method: 'GET',
+      // @ts-ignore
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (amnesiaResponse.ok) {
+      const amnesiaJson = await amnesiaResponse.json();
+      if (amnesiaJson && amnesiaJson.DADOS) {
+        console.log(`[executeCpfLookup] Success with PRIMARY API Amnesia`);
+        const item = {
+          CPF: amnesiaJson.DADOS.cpf,
+          NOME: formatName(amnesiaJson.DADOS.nome),
+          NASC: amnesiaJson.DADOS.data_nascimento,
+          NOME_MAE: formatName(amnesiaJson.DADOS.nome_mae),
+          NOME_PAI: formatName(amnesiaJson.DADOS.nome_pai), // if available
+          SEXO: amnesiaJson.DADOS.sexo,
+          _provider: "Amnesia Tecnologia"
+        };
+        return consultaResponseSchema.parse(item);
+      }
+    } else {
+      console.error(`[executeCpfLookup] PRIMARY API Amnesia HTTP error ${amnesiaResponse.status}, falling back to next API`);
+    }
+  } catch (error) {
+    console.error(`Error consulting CPF with PRIMARY API Amnesia:`, error);
+  }
+
+  // 1.5 TENTA ATHENAS BUSCAS COMO SEGUNDA OPÇÃO
   const athenasKey = (typeof process !== "undefined" && process.env.ATHENAS_API_KEY) ? process.env.ATHENAS_API_KEY : '';
   
   try {
     const athenasUrl = `https://api.athenasbuscas.com/api/ext/v1/cadsus/${cleanCpf}`;
-    console.log(`[executeCpfLookup] Trying PRIMARY API Athenas for CPF ${cleanCpf}`);
+    console.log(`[executeCpfLookup] Trying FALLBACK API Athenas for CPF ${cleanCpf}`);
     const athenasResponse = await fetch(athenasUrl, {
       method: 'GET',
       headers: {
@@ -61,7 +95,7 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
     if (athenasResponse.ok) {
       const athenasJson = await athenasResponse.json();
       if (athenasJson && athenasJson.data) {
-        console.log(`[executeCpfLookup] Success with PRIMARY API Athenas`);
+        console.log(`[executeCpfLookup] Success with FALLBACK API Athenas`);
         const item = {
           CPF: athenasJson.data.cpf,
           NOME: formatName(athenasJson.data.nome),
@@ -74,10 +108,10 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
         return consultaResponseSchema.parse(item);
       }
     } else {
-      console.error(`[executeCpfLookup] PRIMARY API Athenas HTTP error ${athenasResponse.status}, falling back to SearchAPI`);
+      console.error(`[executeCpfLookup] FALLBACK API Athenas HTTP error ${athenasResponse.status}, falling back to SearchAPI`);
     }
   } catch (error) {
-    console.error(`Error consulting CPF with PRIMARY API Athenas:`, error);
+    console.error(`Error consulting CPF with FALLBACK API Athenas:`, error);
   }
 
   // 2. SE ATHENAS FALHAR, TENTA A SEARCH API COMO FALLBACK
