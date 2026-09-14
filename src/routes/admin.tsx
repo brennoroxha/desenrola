@@ -289,14 +289,26 @@ function AdminPage() {
 
   const normalizeCpf = (cpf: string | null) => String(cpf || "").replace(/\D/g, "");
 
-  const cpfToEarliestConta = useMemo(() => {
-    const map = new Map<string, { conta: string; time: string }>();
+  const cpfToEarliestReferrer = useMemo(() => {
+    const map = new Map<string, { referer: string; time: string }>();
     for (const s of sessions) {
-      if (!s.cpf || !s.conta) continue;
+      if (!s.cpf) continue;
+      
+      let refText = "Desconhecida";
+      const rawOrigem = s.events.find(e => e.meta && (e.meta as any).origem)?.meta?.origem;
+      
+      if (rawOrigem?.referrer_host) {
+        refText = str(rawOrigem.referrer_host);
+      } else if (rawOrigem?.referrer) {
+        refText = str(rawOrigem.referrer);
+      } else if (s.origem.label !== "Direto / digitado" && s.origem.label !== "Desconhecida") {
+        refText = s.origem.label;
+      }
+
       const clean = normalizeCpf(s.cpf);
       const existing = map.get(clean);
       if (!existing || s.first < existing.time) {
-        map.set(clean, { conta: s.conta, time: s.first });
+        map.set(clean, { referer: refText, time: s.first });
       }
     }
     return map;
@@ -310,8 +322,8 @@ function AdminPage() {
         if (ac.includes("TAXA") || ac.includes("SCORE") || ac.includes("IMPOSTO") || ac.includes("UPSELL")) continue;
         
         const clean = normalizeCpf(t.cpf);
-        const earliest = cpfToEarliestConta.get(clean);
-        const contaId = earliest ? earliest.conta : "Desconhecida";
+        const earliest = cpfToEarliestReferrer.get(clean);
+        const contaId = earliest ? earliest.referer : "Desconhecida";
         
         const cur = map.get(contaId) || { id: contaId, pagas: 0, pendentes: 0 };
         if (t.status === "PAID") cur.pagas++;
@@ -320,7 +332,7 @@ function AdminPage() {
       }
     }
     return Array.from(map.values()).sort((a, b) => b.pagas - a.pagas || b.pendentes - a.pendentes);
-  }, [data, cpfToEarliestConta]);
+  }, [data, cpfToEarliestReferrer]);
 
   const origens = useMemo(() => {
     const map = new Map<string, { label: string; detail: string; sessions: Set<string>; last: string }>();
@@ -396,7 +408,7 @@ function AdminPage() {
             ["funnel", "Funil de Conversão"],
             ["sessions", `Sessões (${sessions.length})`],
             ["origem", `Origem de Tráfego (${origens.length})`],
-            ["conta", `Vendas por Conta (${contas.length})`],
+            ["conta", `Vendas por Origem (${contas.length})`],
             ["tx", `Pedidos (${data?.transactions.length || 0})`],
             ["comp", `Comprovantes (${data?.comprovantes.length || 0})`],
             ["gateway", `Gateway de Pagamento`],
@@ -424,6 +436,7 @@ function AdminPage() {
             {tab === "funnel" ? "Funil de Conversão" :
              tab === "sessions" ? "Sessões e Visitantes" :
              tab === "origem" ? "Origem de Tráfego" :
+             tab === "conta" ? "Vendas por Origem (Referrer)" :
              tab === "tx" ? "Pedidos e Transações" :
              tab === "comp" ? "Comprovantes Enviados" :
              tab === "gateway" ? "Gateway de Pagamento" :
@@ -565,7 +578,7 @@ function AdminPage() {
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#09090b" }}>
-                  <th style={th}>Conta (Google Ads)</th><th style={th}>Vendas Pagas</th><th style={th}>Vendas Pendentes</th>
+                  <th style={th}>Origem (Referrer)</th><th style={th}>Vendas Pagas</th><th style={th}>Vendas Pendentes</th>
                 </tr>
               </thead>
               <tbody>
@@ -580,7 +593,7 @@ function AdminPage() {
             </table>
             {contas.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem vendas contabilizadas.</div>}
             <div style={{ padding: 16, fontSize: 12, color: "#71717a", borderTop: "1px solid #27272a", background: "#09090b" }}>
-              Os pedidos são atribuídos à conta original do cliente ignorando upsells. Transações sem conta mapeada caem em "Desconhecida".
+              Os pedidos são atribuídos ao referrer original (ou UTM) do cliente ignorando upsells. Transações sem origem mapeada caem em "Desconhecida".
             </div>
           </div>
         )}
