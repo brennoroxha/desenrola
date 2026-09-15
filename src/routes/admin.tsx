@@ -529,9 +529,23 @@ function AdminPage() {
              )}
           </h2>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <label style={{ fontSize: 13, color: "#a1a1aa", fontWeight: 500 }}>Data base:</label>
-            <input type="date" value={day} onChange={(e) => setDay(e.target.value)}
-              style={{ padding: "8px 12px", background: "#18181b", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, outline: "none", fontSize: 13, colorScheme: "dark" }} />
+            <label style={{ fontSize: 13, color: "#a1a1aa", fontWeight: 500 }}>Período:</label>
+            <select
+              value={day === "3d" ? "3d" : day === "all" ? "all" : "day"}
+              onChange={(e) => {
+                if (e.target.value === "day") setDay(todayBR());
+                else setDay(e.target.value);
+              }}
+              style={{ padding: "8px 12px", background: "#18181b", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, outline: "none", fontSize: 13 }}
+            >
+              <option value="day">Dia Específico</option>
+              <option value="3d">Últimos 3 dias</option>
+              <option value="all">Total (Todo o período)</option>
+            </select>
+            {day !== "3d" && day !== "all" && (
+              <input type="date" value={day} onChange={(e) => setDay(e.target.value)}
+                style={{ padding: "8px 12px", background: "#18181b", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, outline: "none", fontSize: 13, colorScheme: "dark" }} />
+            )}
             <button onClick={() => load(pw, day)} disabled={loading}
               style={{ padding: "8px 16px", background: "#fafafa", color: "#09090b", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
               {loading ? "..." : "Atualizar"}

@@ -61,8 +61,17 @@ export const Route = createFileRoute("/api/public/admin/data")({
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const start = day ? new Date(day + "T00:00:00-03:00") : new Date(Date.now() - 24 * 60 * 60 * 1000);
-          const end = day ? new Date(start.getTime() + 24 * 60 * 60 * 1000) : new Date();
+          let start, end;
+          if (day === "all") {
+            end = new Date();
+            start = new Date("2020-01-01T00:00:00-03:00");
+          } else if (day === "3d") {
+            end = new Date();
+            start = new Date(end.getTime() - 3 * 24 * 60 * 60 * 1000);
+          } else {
+            start = day ? new Date(day + "T00:00:00-03:00") : new Date(Date.now() - 24 * 60 * 60 * 1000);
+            end = day ? new Date(start.getTime() + 24 * 60 * 60 * 1000) : new Date();
+          }
           const startISO = start.toISOString();
           const endISO = end.toISOString();
 
