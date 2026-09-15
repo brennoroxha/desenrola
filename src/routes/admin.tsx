@@ -16,9 +16,31 @@ export const Route = createFileRoute("/admin")({
 type Ev = { id: string; session_id: string; cpf: string | null; nome: string | null; acordo: string | null; page: string; step: string; meta: any; ip: string | null; user_agent: string | null; criado_em: string };
 type Tx = { transaction_id: string; cpf: string; nome: string | null; email: string | null; phone: string | null; amount_cents: number; acordo: string | null; status: string; paid_at: string | null; criado_em: string };
 type Comp = { id: string; transaction_id: string | null; acordo: string | null; cpf: string | null; nome: string | null; filename: string | null; mime: string | null; size_bytes: number | null; ip: string | null; criado_em: string };
-type Data = { ok: boolean; range: { start: string; end: string; day: string | null }; events: Ev[]; transactions: Tx[]; comprovantes: Comp[]; cpf_consultas: { cpf: string; nome: string | null; consultado_em: string; raw?: any }[] };
+type Data = { ok: boolean; range: { start: string; end: string; day: string | null }; events: Ev[]; transactions: Tx[]; comprovantes: Comp[]; cpf_consultas: { cpf: string; nome: string | null; consultado_em: string; raw?: any; nascimento?: string | null; sexo?: string | null }[] };
 
 const TZ = "America/Sao_Paulo";
+
+function calculateAge(nascimento: string | null | undefined): string {
+  if (!nascimento) return "—";
+  // Assume DD/MM/YYYY or YYYY-MM-DD
+  let d, m, y;
+  if (nascimento.includes("/")) {
+    [d, m, y] = nascimento.split("/");
+  } else if (nascimento.includes("-")) {
+    [y, m, d] = nascimento.split("-");
+  } else {
+    return "—";
+  }
+  const birthDate = new Date(+y, +m - 1, +d);
+  if (isNaN(birthDate.getTime())) return "—";
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const mDiff = today.getMonth() - birthDate.getMonth();
+  if (mDiff < 0 || (mDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age.toString();
+}
 
 type OrigemInfo = { label: string; detail: string };
 
@@ -297,7 +319,9 @@ function AdminPage() {
       let refText = "Desconhecida";
       const rawOrigem = s.events.find(e => e.meta && (e.meta as any).origem)?.meta?.origem;
       
-      if (rawOrigem?.referrer_host) {
+      if (rawOrigem?.conta) {
+        refText = `Conta ${str(rawOrigem.conta)}`;
+      } else if (rawOrigem?.referrer_host) {
         refText = str(rawOrigem.referrer_host);
       } else if (rawOrigem?.referrer) {
         refText = str(rawOrigem.referrer);
@@ -620,12 +644,15 @@ function AdminPage() {
                 <thead>
                   <tr style={{ background: "#09090b" }}>
                     <th style={th}>Ação</th>
-                    <th style={th}>Status</th><th style={th}>Nome</th><th style={th}>CPF</th><th style={th}>Valor</th>
+                    <th style={th}>Status</th><th style={th}>Nome</th><th style={th}>CPF</th><th style={th}>Idade</th><th style={th}>Sexo</th><th style={th}>Valor</th>
                     <th style={th}>Criado</th><th style={th}>Pago em</th><th style={th}>Acordo</th><th style={th}>ID</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.transactions.map((t) => (
+                  {data.transactions.map((t) => {
+                    const cleanCpf = normalizeCpf(t.cpf);
+                    const consulta = data.cpf_consultas.find(c => normalizeCpf(c.cpf) === cleanCpf);
+                    return (
                     <tr key={t.transaction_id} style={{ borderTop: "1px solid #27272a" }}>
                       <td style={td}>
                         <button
@@ -650,13 +677,16 @@ function AdminPage() {
                       <td style={td}><span style={{ padding: "4px 10px", borderRadius: 12, fontWeight: 500, background: t.status === "PAID" ? "#064e3b" : "#27272a", color: t.status === "PAID" ? "#34d399" : "#d4d4d8", fontSize: 11 }}>{t.status}</span></td>
                       <td style={{ ...td, color: "#fafafa", fontWeight: 500 }}>{t.nome || "—"}</td>
                       <td style={{ ...td, color: "#a1a1aa" }}>{t.cpf}</td>
+                      <td style={{ ...td, color: "#a1a1aa" }}>{calculateAge(consulta?.nascimento || consulta?.raw?.nascimento)}</td>
+                      <td style={{ ...td, color: "#a1a1aa" }}>{consulta?.sexo || consulta?.raw?.sexo || "—"}</td>
                       <td style={{ ...td, color: "#fafafa", fontWeight: 600 }}>{fmtBRL(t.amount_cents)}</td>
                       <td style={{ ...td, color: "#a1a1aa" }}>{fmtDate(t.criado_em)}</td>
                       <td style={{ ...td, color: "#a1a1aa" }}>{t.paid_at ? fmtDate(t.paid_at) : "—"}</td>
                       <td style={{ ...td, color: "#a1a1aa" }}>{t.acordo || "—"}</td>
                       <td style={{ ...td, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", fontSize: 11, color: "#71717a" }}>{t.transaction_id.slice(0, 12)}...</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
               {data.transactions.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem pedidos.</div>}

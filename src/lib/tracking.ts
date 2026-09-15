@@ -67,7 +67,7 @@ function captureOrigem(): Origem | null {
       gclid: qs.get("gclid"),
       fbclid: qs.get("fbclid"),
       landing: window.location.pathname || null,
-      conta: qs.get("conta"),
+      conta: qs.get("c") || qs.get("conta"),
     };
     try { window.sessionStorage.setItem(ORIGIN_KEY, JSON.stringify(origem)); } catch {}
     return origem;
