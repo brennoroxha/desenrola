@@ -109,7 +109,7 @@ function AdminPage() {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"funnel" | "sessions" | "origem" | "conta" | "tx" | "comp" | "gateway" | "ips" | "pushcut">("funnel");
+  const [tab, setTab] = useState<"funnel" | "sessions" | "origem" | "conta" | "tx" | "comp" | "gateway" | "ips" | "pushcut" | "publico">("funnel");
   const [pushcutUrls, setPushcutUrls] = useState({ gerado: "", aprovado: "" });
   const [pushcutMsg, setPushcutMsg] = useState("");
   const [pushcutSaving, setPushcutSaving] = useState(false);
@@ -406,6 +406,50 @@ function AdminPage() {
       .filter((x) => !x.tx || x.tx.status !== "PAID");
   }, [data]);
 
+  const publicoStats = useMemo(() => {
+    if (!data) return { ages: {}, genders: {}, total: 0 };
+    const ages: Record<string, number> = { "18-24": 0, "25-34": 0, "35-44": 0, "45-54": 0, "55-64": 0, "65+": 0, "Desconhecido": 0 };
+    const genders: Record<string, number> = { "Masculino": 0, "Feminino": 0, "Desconhecido": 0 };
+    
+    let total = 0;
+    
+    // Pegamos CPFs únicos que chegaram a gerar transação para evitar duplicar upsells
+    const uniqueCpfs = new Set<string>();
+    
+    for (const t of data.transactions) {
+      const ac = (t.acordo || "").toUpperCase();
+      if (ac.includes("TAXA") || ac.includes("SCORE") || ac.includes("IMPOSTO") || ac.includes("UPSELL")) continue;
+      
+      const cleanCpf = normalizeCpf(t.cpf);
+      if (uniqueCpfs.has(cleanCpf)) continue;
+      uniqueCpfs.add(cleanCpf);
+      
+      total++;
+      
+      const consulta = data.cpf_consultas.find(c => normalizeCpf(c.cpf) === cleanCpf);
+      
+      const ageStr = calculateAge(consulta?.nascimento || consulta?.raw?.nascimento);
+      let ageGroup = "Desconhecido";
+      if (ageStr !== "—") {
+        const a = parseInt(ageStr, 10);
+        if (a >= 18 && a <= 24) ageGroup = "18-24";
+        else if (a >= 25 && a <= 34) ageGroup = "25-34";
+        else if (a >= 35 && a <= 44) ageGroup = "35-44";
+        else if (a >= 45 && a <= 54) ageGroup = "45-54";
+        else if (a >= 55 && a <= 64) ageGroup = "55-64";
+        else if (a >= 65) ageGroup = "65+";
+      }
+      ages[ageGroup]++;
+
+      let g = (consulta?.sexo || consulta?.raw?.sexo || "Desconhecido").toUpperCase();
+      if (g.startsWith("M")) g = "Masculino";
+      else if (g.startsWith("F")) g = "Feminino";
+      else g = "Desconhecido";
+      genders[g]++;
+    }
+    return { ages, genders, total };
+  }, [data]);
+
   if (!authed) {
     return (
       <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#09090b", color: "#fafafa", fontFamily: "Inter, system-ui, sans-serif" }}>
@@ -433,6 +477,7 @@ function AdminPage() {
             ["sessions", `Sessões (${sessions.length})`],
             ["origem", `Origem de Tráfego (${origens.length})`],
             ["conta", `Vendas por Origem (${contas.length})`],
+            ["publico", "Melhor Público"],
             ["tx", `Pedidos (${data?.transactions.length || 0})`],
             ["comp", `Comprovantes (${data?.comprovantes.length || 0})`],
             ["gateway", `Gateway de Pagamento`],
@@ -461,6 +506,7 @@ function AdminPage() {
              tab === "sessions" ? "Sessões e Visitantes" :
              tab === "origem" ? "Origem de Tráfego" :
              tab === "conta" ? "Vendas por Origem (Referrer)" :
+             tab === "publico" ? "Melhor Público" :
              tab === "tx" ? "Pedidos e Transações" :
              tab === "comp" ? "Comprovantes Enviados" :
              tab === "gateway" ? "Gateway de Pagamento" :
@@ -618,6 +664,49 @@ function AdminPage() {
             {contas.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem vendas contabilizadas.</div>}
             <div style={{ padding: 16, fontSize: 12, color: "#71717a", borderTop: "1px solid #27272a", background: "#09090b" }}>
               Os pedidos são atribuídos ao referrer original (ou UTM) do cliente ignorando upsells. Transações sem origem mapeada caem em "Desconhecida".
+            </div>
+          </div>
+        )}
+
+        {tab === "publico" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+            <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, padding: 24 }}>
+              <h3 style={{ marginTop: 0, color: "#fafafa", marginBottom: 24 }}>Por Idade</h3>
+              {Object.entries(publicoStats.ages).map(([label, count]) => {
+                const pct = publicoStats.total > 0 ? (count / publicoStats.total) * 100 : 0;
+                return (
+                  <div key={label} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                      <span style={{ color: "#d4d4d8" }}>{label}</span>
+                      <span style={{ color: "#fafafa", fontWeight: 600 }}>{count} ({pct.toFixed(1)}%)</span>
+                    </div>
+                    <div style={{ width: "100%", height: 8, background: "#27272a", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: "#38bdf8", borderRadius: 4 }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, padding: 24 }}>
+              <h3 style={{ marginTop: 0, color: "#fafafa", marginBottom: 24 }}>Por Sexo</h3>
+              {Object.entries(publicoStats.genders).map(([label, count]) => {
+                const pct = publicoStats.total > 0 ? (count / publicoStats.total) * 100 : 0;
+                const color = label === "Masculino" ? "#34d399" : label === "Feminino" ? "#f472b6" : "#71717a";
+                return (
+                  <div key={label} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                      <span style={{ color: "#d4d4d8" }}>{label}</span>
+                      <span style={{ color: "#fafafa", fontWeight: 600 }}>{count} ({pct.toFixed(1)}%)</span>
+                    </div>
+                    <div style={{ width: "100%", height: 8, background: "#27272a", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 4 }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ gridColumn: "1 / -1", padding: 16, fontSize: 12, color: "#71717a", background: "#09090b", border: "1px solid #27272a", borderRadius: 12 }}>
+              Dados baseados em <strong>{publicoStats.total}</strong> pessoas únicas que geraram ao menos um pedido principal neste dia.
             </div>
           </div>
         )}
