@@ -535,7 +535,7 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
     pix: {
       expirationInSeconds: 86400,
     },
-    postbackUrl: input.postbackUrl,
+    ...(input.postbackUrl.startsWith("https://") ? { postbackUrl: input.postbackUrl } : {}),
   };
 
   let res: Response;
