@@ -19,21 +19,29 @@ export async function getInvictusCredentials(): Promise<InvictusCredentials | nu
       .eq("provider", "invictus")
       .maybeSingle();
 
-    if (!data?.secret_key) {
-      cache = { data: null, fetchedAt: now };
-      return null;
+    if (data?.secret_key) {
+      const creds: InvictusCredentials = {
+        apiKey: data.secret_key,
+        offerHash: data.public_key || undefined,
+      };
+      cache = { data: creds, fetchedAt: now };
+      return creds;
     }
+  } catch (err) {
+    console.error("[invictus/credentials] failed to fetch", err);
+  }
 
+  const envKey = process.env.INVICTUSPAY_API_KEY;
+  if (envKey) {
     const creds: InvictusCredentials = {
-      apiKey: data.secret_key,
-      offerHash: data.public_key || undefined,
+      apiKey: envKey,
+      offerHash: process.env.INVICTUSPAY_OFFER_HASH || undefined,
     };
     cache = { data: creds, fetchedAt: now };
     return creds;
-  } catch (err) {
-    console.error("[invictus/credentials] failed to fetch", err);
-    return null;
   }
+
+  return null;
 }
 
 export function invalidateInvictusCredentialsCache() {

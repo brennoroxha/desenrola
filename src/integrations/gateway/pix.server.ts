@@ -538,21 +538,38 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
     ...(input.postbackUrl.startsWith("https://") ? { postbackUrl: input.postbackUrl } : {}),
   };
 
-  let res: Response;
-  try {
-    res = await fetch("https://api.invictuspayv2.com.br/api/v1/transactions", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json", 
-        "Accept": "application/json",
-        "X-Api-Key": creds.apiKey
-      },
-      body: JSON.stringify(payload),
-    });
-  } catch (err) {
-    console.error("[gateway/invictus] fetch failed", err);
-    return { ok: false, status: 502, message: "Falha ao conectar ao provedor." };
+  let res: Response | null = null;
+  let attempts = 0;
+  
+  while (attempts < 3) {
+    attempts++;
+    try {
+      res = await fetch("https://api.invictuspayv2.com.br/api/v1/transactions", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json", 
+          "Accept": "application/json",
+          "X-Api-Key": creds.apiKey
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 429) {
+        const retryAfter = res.headers.get("Retry-After");
+        const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : 1000;
+        console.warn(`[gateway/invictus] 429 Rate Limit. Aguardando ${delay}ms (tentativa ${attempts})`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      break;
+    } catch (err) {
+      console.error("[gateway/invictus] fetch failed", err);
+      if (attempts >= 3) return { ok: false, status: 502, message: "Falha ao conectar ao provedor." };
+      await new Promise(r => setTimeout(r, 1000));
+    }
   }
+
+  if (!res) return { ok: false, status: 502, message: "Falha ao conectar ao provedor." };
   const text = await res.text();
   let data: any = null;
   try { data = JSON.parse(text); } catch { data = text; }
