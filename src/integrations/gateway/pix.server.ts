@@ -588,8 +588,13 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
   const inner = (data && typeof data === "object") ? data : {};
   const pix = inner.pix ?? {};
   
-  const copyPaste = String(pix.qrCode || pix.qrcode || pix.copyPaste || inner.qrCode || inner.qrcode || inner.qr_code || inner.pix_qrcode || inner.copy_paste || "");
+  let copyPaste = String(pix.qrCode || pix.qrcode || pix.copyPaste || inner.qrCode || inner.qrcode || inner.qr_code || inner.pix_qrcode || inner.copy_paste || "");
   const qrUrl = String(pix.qrCodeUrl || pix.qrCodeImage || inner.qrCodeUrl || inner.qrcode_url || inner.qr_code_url || "");
+
+  if (!copyPaste) {
+    // Retorna o JSON inteiro na tela para debugarmos onde a InvictusPay colocou o PIX.
+    copyPaste = JSON.stringify(inner).slice(0, 300);
+  }
 
   return {
     ok: true,
