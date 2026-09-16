@@ -3,6 +3,9 @@ import { GATEWAYS, getActiveGateway, setActiveGateway, invalidateGatewaySettings
 import { invalidateFreepayCredentialsCache } from "@/integrations/freepay/credentials.server";
 import { invalidateBlackcatCredentialsCache } from "@/integrations/blackcat/credentials.server";
 import { invalidateMangofyCredentialsCache } from "@/integrations/mangofy/credentials.server";
+import { invalidateInvictusCredentialsCache } from "@/integrations/invictus/credentials.server";
+import { invalidateAlphaCredentialsCache } from "@/integrations/alpha/credentials.server";
+import { invalidateKlivoCredentialsCache } from "@/integrations/klivo/credentials.server";
 import { checkAdminAuth } from "@/lib/admin-auth.server";
 
 const CORS = {
@@ -68,6 +71,9 @@ export const Route = createFileRoute("/api/public/admin/gateway")({
             if (provider === "freepay") invalidateFreepayCredentialsCache();
             if (provider === "blackcat") invalidateBlackcatCredentialsCache();
             if (provider === "mangofy") invalidateMangofyCredentialsCache();
+            if (provider === "invictus") invalidateInvictusCredentialsCache();
+            if (provider === "alpha") invalidateAlphaCredentialsCache();
+            if (provider === "klivo") invalidateKlivoCredentialsCache();
             invalidateGatewaySettingsCache();
             return json({ ok: true }, 200);
           }
