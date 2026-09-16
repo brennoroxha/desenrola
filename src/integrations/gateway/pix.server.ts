@@ -525,13 +525,11 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
             quantity: 1,
             amount: input.amount_cents,
             offer_hash: creds.offerHash,
-            externalRef: input.acordo,
           }
         : {
             quantity: 1,
             amount: input.amount_cents,
             description: input.acordo || "Pagamento PIX",
-            externalRef: input.acordo,
           }
     ],
     pix: {
@@ -681,12 +679,13 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
     };
   }
 
-  const isInvictus = src.includes("invictus") || (payload.paymentMethod === "pix" && payload.customer && payload.items) || typeof payload.txId === "string";
+  const isInvictus = src.includes("invictus") || typeof payload.transaction?.id === "string" || typeof payload.txId === "string";
   if (isInvictus) {
+    const tx = payload.transaction || payload;
     return {
-      id: String(payload.id ?? payload.txId ?? "") || null,
-      status: String(payload.status ?? "").toUpperCase() || null,
-      paidAt: payload.paidAt ?? null,
+      id: String(tx.id ?? payload.txId ?? "") || null,
+      status: String(tx.status ?? payload.status ?? "").toUpperCase() || null,
+      paidAt: tx.paid_at ?? tx.paidAt ?? null,
       gateway: "invictus",
     };
   }
