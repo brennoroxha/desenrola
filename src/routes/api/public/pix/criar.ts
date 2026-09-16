@@ -97,11 +97,9 @@ export const Route = createFileRoute("/api/public/pix/criar")({
           }
         })();
 
-        // Liberamos o cliente o mais rápido possível (esperamos só 50ms para tentar garantir o início das requests).
-        await Promise.race([
-          sideEffects,
-          new Promise(r => setTimeout(r, 50))
-        ]);
+        // Precisamos aguardar (await) os sideEffects porque em ambientes serverless (Vercel/Cloudflare) 
+        // retornar a resposta interrompe imediatamente qualquer Promise rodando em background.
+        await sideEffects;
 
         console.log("[pix/criar] response enviada", { ms: Date.now() - t0 });
 

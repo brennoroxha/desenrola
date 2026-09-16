@@ -172,7 +172,7 @@ function AdminPage() {
       } catch {}
     };
     fetchOnline();
-    const iv = setInterval(fetchOnline, 5000);
+    const iv = setInterval(fetchOnline, 30000);
     return () => clearInterval(iv);
   }, [authed, pw]);
 

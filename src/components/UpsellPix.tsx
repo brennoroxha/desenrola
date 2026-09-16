@@ -150,7 +150,7 @@ export function UpsellPix(props: UpsellPixProps) {
               pollRef.current = null;
             }
           } catch {}
-        }, 3000);
+        }, 10000);
       }
     } catch {
       setErrorMsg("Não foi possível conectar. Verifique sua conexão.");

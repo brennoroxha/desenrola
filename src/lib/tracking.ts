@@ -114,7 +114,7 @@ export function startPresenceHeartbeat() {
   };
 
   beat();
-  window.setInterval(beat, 30_000);
+  window.setInterval(beat, 60_000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") beat();
   });
@@ -260,7 +260,7 @@ export function startPendingPurchasesWatcher() {
     reconcilePendingPurchases().catch(() => {});
   };
 
-  window.setInterval(tick, 30_000);
+  window.setInterval(tick, 60_000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") tick();
   });
