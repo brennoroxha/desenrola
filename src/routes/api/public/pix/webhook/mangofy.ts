@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/public/pix/webhook/mangofy")({
 
         let status = statusRaw;
         // Mapeamento interno padrão de status
-        if (status === "APPROVED") status = "PAID";
+        if (status === "APPROVED" || status === "PAID" || status === "approved" || status === "paid") status = "PAID";
         else if (status === "REFUSED" || status === "CANCELED_ANTIFRAUD") status = "REFUSED";
         else if (status === "REFUNDED" || status === "PARTIAL_REFUNDED" || status === "CHARGE_BACK" || status === "CHARGE_BACK_REQUESTED") status = "REFUNDED";
         else if (status === "CANCELED") status = "CANCELLED";

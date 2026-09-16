@@ -395,7 +395,7 @@ async function getStatusKlivo(id: string): Promise<StatusResult> {
 // ---------- MangoFy ----------
 function mapMangofyStatus(raw: unknown): StatusResult["status"] {
   const s = String(raw || "").toLowerCase();
-  if (s === "approved") return "PAID";
+  if (s === "approved" || s === "paid") return "PAID";
   if (s === "refused" || s === "canceled_antifraud") return "REFUSED";
   if (s === "refunded" || s === "partial_refunded" || s === "charge_back" || s === "charge_back_requested") return "REFUNDED";
   if (s === "canceled") return "CANCELLED";
