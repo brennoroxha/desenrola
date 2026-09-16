@@ -138,6 +138,18 @@ function AdminPage() {
   const [pushcutMsg, setPushcutMsg] = useState("");
   const [pushcutSaving, setPushcutSaving] = useState(false);
   const [expandedSid, setExpandedSid] = useState<string | null>(null);
+  const [txPage, setTxPage] = useState(1);
+  const [txData, setTxData] = useState<{ transactions: Tx[], cpf_consultas: any[], total: number } | null>(null);
+  const [txLoading, setTxLoading] = useState(false);
+
+  const [compPage, setCompPage] = useState(1);
+  const [compData, setCompData] = useState<{ comprovantes: Comp[], transactions: any[], total: number } | null>(null);
+  const [compLoading, setCompLoading] = useState(false);
+
+  const [sessPage, setSessPage] = useState(1);
+  const [sessData, setSessData] = useState<{ events: Ev[], total_events: number } | null>(null);
+  const [sessLoading, setSessLoading] = useState(false);
+
   const [gwState, setGwState] = useState<{ active: string; providers: { id: string; configured: boolean; public_key: string | null; product_hash?: string | null; atualizado_em: string | null }[] } | null>(null);
   const [gwSaving, setGwSaving] = useState(false);
   const [gwMsg, setGwMsg] = useState("");
@@ -254,6 +266,36 @@ function AdminPage() {
       if (j.ok) setGwState({ active: j.active, providers: j.providers });
     } catch {}
   };
+
+  useEffect(() => {
+    if (authed && pw && tab === "tx") {
+      setTxLoading(true);
+      fetch("/api/public/admin/transactions", {
+        method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Password": pw },
+        body: JSON.stringify({ page: txPage, limit: 50 })
+      }).then(r => r.json()).then(j => { if (j.ok) setTxData(j); }).finally(() => setTxLoading(false));
+    }
+  }, [authed, pw, tab, txPage]);
+
+  useEffect(() => {
+    if (authed && pw && tab === "comp") {
+      setCompLoading(true);
+      fetch("/api/public/admin/comprovantes", {
+        method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Password": pw },
+        body: JSON.stringify({ page: compPage, limit: 50 })
+      }).then(r => r.json()).then(j => { if (j.ok) setCompData(j); }).finally(() => setCompLoading(false));
+    }
+  }, [authed, pw, tab, compPage]);
+
+  useEffect(() => {
+    if (authed && pw && tab === "sessions") {
+      setSessLoading(true);
+      fetch("/api/public/admin/sessions", {
+        method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Password": pw },
+        body: JSON.stringify({ page: sessPage, limit: 50 })
+      }).then(r => r.json()).then(j => { if (j.ok) setSessData(j); }).finally(() => setSessLoading(false));
+    }
+  }, [authed, pw, tab, sessPage]);
 
   useEffect(() => {
     if (authed && pw && tab === "gateway") loadGateway(pw);
@@ -606,52 +648,89 @@ function AdminPage() {
           </div>
         )}
 
-        {tab === "sessions" && (
+        {tab === "sessions" && sessData && (
           <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, overflow: "hidden" }}>
-            {sessions.map((s) => {
-              const chegou = (step: string) => s.steps.some((k) => k.endsWith(":" + step));
-              const badges = [
-                chegou("home_view") && "Home",
-                chegou("cpf_view") && "CPF",
-                chegou("chat_view") && "Chat",
-                chegou("chat_acordo_gerado") && "Acordo",
-                chegou("pagamento_view") && "Pagamento",
-                chegou("pagamento_pix_gerado") && "PIX Gerado",
-                chegou("pagamento_pix_pago") && "PAGO",
-                chegou("pagamento_comprovante_upload") && "Comprovante",
-              ].filter(Boolean) as string[];
-              
-              return (
-                <div key={s.sid} style={{ padding: 16, borderBottom: "1px solid #27272a" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
-                    onClick={() => setExpandedSid(expandedSid === s.sid ? null : s.sid)}>
-                    <div>
-                      <div style={{ fontWeight: 600, color: "#fafafa" }}>{s.nome || "—"} <span style={{ color: "#a1a1aa", fontWeight: 400 }}>{s.cpf || ""}</span></div>
-                      <div style={{ fontSize: 12, color: "#a1a1aa", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
-                        <span>IP {s.ip || "—"} {s.ip && <IPLocation ip={s.ip} />} · {fmtDate(s.first)} → {fmtDate(s.last)}</span>
+            {sessLoading && <div style={{ padding: 16, color: "#38bdf8" }}>Carregando página {sessPage}...</div>}
+            
+            <div style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #27272a" }}>
+               <h3 style={{ margin: 0, color: "#fafafa" }}>Exibindo {sessData.events.length} eventos recentes (Total {sessData.total_events}, Página {sessPage})</h3>
+               <div style={{ display: "flex", gap: 12 }}>
+                 <button disabled={sessPage <= 1 || sessLoading} onClick={() => setSessPage(p => p - 1)} style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Anterior</button>
+                 <button disabled={sessData.events.length < 50 || sessLoading} onClick={() => setSessPage(p => p + 1)} style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Próximo</button>
+               </div>
+            </div>
+
+            {(() => {
+              const map = new Map<string, Ev[]>();
+              for (const e of sessData.events) {
+                const arr = map.get(e.session_id) || [];
+                arr.push(e);
+                map.set(e.session_id, arr);
+              }
+              const list = Array.from(map.entries()).map(([sid, evs]) => {
+                const sorted = [...evs].sort((a, b) => a.criado_em.localeCompare(b.criado_em));
+                const withCpf = sorted.find((e) => e.cpf) || sorted[0];
+                const withAcordo = [...sorted].reverse().find((e) => e.acordo);
+                const rawOrigem = sorted.find((e) => e.meta && (e.meta as any).origem)?.meta?.origem || null;
+                return {
+                  sid,
+                  events: sorted,
+                  cpf: withCpf?.cpf || null,
+                  nome: withCpf?.nome || null,
+                  acordo: withAcordo?.acordo || null,
+                  ip: sorted[0]?.ip || null,
+                  origem: describeOrigem(rawOrigem),
+                  first: sorted[0]?.criado_em || "",
+                  last: sorted[sorted.length - 1]?.criado_em || "",
+                  steps: sorted.map((e) => `${e.page}:${e.step}`),
+                };
+              }).sort((a, b) => b.last.localeCompare(a.last));
+
+              return list.map((s) => {
+                const chegou = (step: string) => s.steps.some((k) => k.endsWith(":" + step));
+                const badges = [
+                  chegou("home_view") && "Home",
+                  chegou("cpf_view") && "CPF",
+                  chegou("chat_view") && "Chat",
+                  chegou("chat_acordo_gerado") && "Acordo",
+                  chegou("pagamento_view") && "Pagamento",
+                  chegou("pagamento_pix_gerado") && "PIX Gerado",
+                  chegou("pagamento_pix_pago") && "PAGO",
+                  chegou("pagamento_comprovante_upload") && "Comprovante",
+                ].filter(Boolean) as string[];
+                
+                return (
+                  <div key={s.sid} style={{ padding: 16, borderBottom: "1px solid #27272a" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+                      onClick={() => setExpandedSid(expandedSid === s.sid ? null : s.sid)}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: "#fafafa" }}>{s.nome || "—"} <span style={{ color: "#a1a1aa", fontWeight: 400 }}>{s.cpf || ""}</span></div>
+                        <div style={{ fontSize: 12, color: "#a1a1aa", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+                          <span>IP {s.ip || "—"} {s.ip && <IPLocation ip={s.ip} />} · {fmtDate(s.first)} → {fmtDate(s.last)}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#38bdf8", marginTop: 4 }}>Origem: {s.origem.label} <span style={{ color: "#71717a" }}>({s.origem.detail})</span></div>
+                        <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {badges.map((b) => (
+                            <span key={b} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 12, fontWeight: 500, background: b === "PAGO" ? "#064e3b" : b === "Comprovante" ? "#78350f" : "#27272a", color: b === "PAGO" ? "#34d399" : b === "Comprovante" ? "#fbbf24" : "#d4d4d8" }}>{b}</span>
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 12, color: "#38bdf8", marginTop: 4 }}>Origem: {s.origem.label} <span style={{ color: "#71717a" }}>({s.origem.detail})</span></div>
-                      <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {badges.map((b) => (
-                          <span key={b} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 12, fontWeight: 500, background: b === "PAGO" ? "#064e3b" : b === "Comprovante" ? "#78350f" : "#27272a", color: b === "PAGO" ? "#34d399" : b === "Comprovante" ? "#fbbf24" : "#d4d4d8" }}>{b}</span>
+                      <div style={{ color: "#71717a", fontSize: 20 }}>{expandedSid === s.sid ? "▾" : "▸"}</div>
+                    </div>
+                    {expandedSid === s.sid && (
+                      <div style={{ marginTop: 12, background: "#09090b", padding: 12, borderRadius: 8, border: "1px solid #27272a", fontSize: 12, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", color: "#d4d4d8" }}>
+                        {s.events.map((e) => (
+                          <div key={e.id} style={{ padding: "3px 0" }}>
+                            <span style={{ color: "#71717a" }}>{fmtDate(e.criado_em)}</span> · <strong>{e.page}</strong>:{e.step} {e.meta ? <span style={{ color: "#a1a1aa" }}>{JSON.stringify(e.meta)}</span> : null}
+                          </div>
                         ))}
                       </div>
-                    </div>
-                    <div style={{ color: "#71717a", fontSize: 20 }}>{expandedSid === s.sid ? "▾" : "▸"}</div>
+                    )}
                   </div>
-                  {expandedSid === s.sid && (
-                    <div style={{ marginTop: 12, background: "#09090b", padding: 12, borderRadius: 8, border: "1px solid #27272a", fontSize: 12, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", color: "#d4d4d8" }}>
-                      {s.events.map((e) => (
-                        <div key={e.id} style={{ padding: "3px 0" }}>
-                          <span style={{ color: "#71717a" }}>{fmtDate(e.criado_em)}</span> · <strong>{e.page}</strong>:{e.step} {e.meta ? <span style={{ color: "#a1a1aa" }}>{JSON.stringify(e.meta)}</span> : null}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {sessions.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem sessões neste dia.</div>}
+                );
+              });
+            })()}
+            {sessData.events.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem sessões neste intervalo.</div>}
           </div>
         )}
 
@@ -749,8 +828,10 @@ function AdminPage() {
           </div>
         )}
 
-        {tab === "tx" && data && (
+        {tab === "tx" && txData && (
           <>
+            {txLoading && <div style={{ color: "#38bdf8", marginBottom: 16 }}>Carregando página {txPage}...</div>}
+            
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
               <div style={{ background: "#18181b", border: "1px solid #27272a", padding: 20, borderRadius: 12 }}>
                 <div style={{ fontSize: 12, color: "#a1a1aa", textTransform: "uppercase", fontWeight: 600 }}>Total Gerado (PIX)</div>
@@ -766,6 +847,14 @@ function AdminPage() {
               </div>
             </div>
 
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+               <h3 style={{ margin: 0, color: "#fafafa" }}>Exibindo {txData.transactions.length} de {txData.total} registros (Página {txPage})</h3>
+               <div style={{ display: "flex", gap: 12 }}>
+                 <button disabled={txPage <= 1 || txLoading} onClick={() => setTxPage(p => p - 1)} style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Anterior</button>
+                 <button disabled={txData.transactions.length < 50 || txLoading} onClick={() => setTxPage(p => p + 1)} style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Próximo</button>
+               </div>
+            </div>
+
             <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, overflow: "auto" }}>
               <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
                 <thead>
@@ -776,9 +865,9 @@ function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.transactions.map((t) => {
+                  {txData.transactions.map((t) => {
                     const cleanCpf = normalizeCpf(t.cpf);
-                    const consulta = data.cpf_consultas.find(c => normalizeCpf(c.cpf) === cleanCpf);
+                    const consulta = txData.cpf_consultas.find(c => normalizeCpf(c.cpf) === cleanCpf);
                     return (
                     <tr key={t.transaction_id} style={{ borderTop: "1px solid #27272a" }}>
                       <td style={td}>
@@ -793,7 +882,9 @@ function AdminPage() {
                               });
                               const j = await res.json();
                               if (!j.ok) { alert(j.message || "Erro"); return; }
-                              await load(pw, day);
+                              // trigger a refetch of just the current page
+                              setTxPage(txPage);
+                              load(pw, day); // load global stats too
                             } catch { alert("Falha de rede."); }
                           }}
                           style={{ padding: "6px 12px", background: t.status === "PAID" ? "#27272a" : "#10b981", color: t.status === "PAID" ? "#71717a" : "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}
@@ -816,15 +907,25 @@ function AdminPage() {
                   })}
                 </tbody>
               </table>
-              {data.transactions.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem pedidos.</div>}
+              {txData.transactions.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem pedidos.</div>}
             </div>
           </>
         )}
 
-        {tab === "comp" && data && (
+        {tab === "comp" && compData && (
           <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, padding: 16 }}>
-            {data.comprovantes.map((c) => {
-              const tx = c.transaction_id ? data.transactions.find((t) => t.transaction_id === c.transaction_id) : null;
+            {compLoading && <div style={{ color: "#38bdf8", marginBottom: 16 }}>Carregando página {compPage}...</div>}
+            
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+               <h3 style={{ margin: 0, color: "#fafafa" }}>Exibindo {compData.comprovantes.length} de {compData.total} comprovantes (Página {compPage})</h3>
+               <div style={{ display: "flex", gap: 12 }}>
+                 <button disabled={compPage <= 1 || compLoading} onClick={() => setCompPage(p => p - 1)} style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Anterior</button>
+                 <button disabled={compData.comprovantes.length < 50 || compLoading} onClick={() => setCompPage(p => p + 1)} style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Próximo</button>
+               </div>
+            </div>
+
+            {compData.comprovantes.map((c) => {
+              const tx = c.transaction_id ? compData.transactions.find((t) => t.transaction_id === c.transaction_id) : null;
               const desvio = !tx || tx.status !== "PAID";
               return (
                 <div key={c.id} style={{ padding: "12px 0", borderBottom: "1px solid #27272a", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -858,7 +959,7 @@ function AdminPage() {
                 </div>
               );
             })}
-            {data.comprovantes.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem comprovantes.</div>}
+            {compData.comprovantes.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#71717a" }}>Sem comprovantes.</div>}
           </div>
         )}
 

@@ -98,19 +98,19 @@ export const Route = createFileRoute("/api/public/admin/data")({
             fetchAll((from, to) => supabaseAdmin.from("desenrola_page_events")
               .select("*")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).range(from, to), 50000),
+              .order("criado_em", { ascending: false }).range(from, to), 10000), // reduced from 50000
             fetchAll((from, to) => supabaseAdmin.from("desenrola_pix_transactions")
               .select("*")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).range(from, to), 10000),
+              .order("criado_em", { ascending: false }).range(from, to), 3000), // reduced from 10000
             fetchAll((from, to) => supabaseAdmin.from("desenrola_comprovantes")
               .select("id, transaction_id, acordo, cpf, nome, filename, mime, size_bytes, ip, criado_em")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).range(from, to), 5000),
+              .order("criado_em", { ascending: false }).range(from, to), 1000), // reduced from 5000
             fetchAll((from, to) => supabaseAdmin.from("desenrola_cpf_consultas")
               .select("cpf, nome, consultado_em, raw, nascimento, sexo")
               .gte("consultado_em", startISO).lte("consultado_em", endISO)
-              .order("consultado_em", { ascending: false }).range(from, to), 10000),
+              .order("consultado_em", { ascending: false }).range(from, to), 3000), // reduced from 10000
           ]);
 
           const dbError =

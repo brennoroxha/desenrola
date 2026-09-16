@@ -22,7 +22,8 @@ export const Route = createFileRoute("/api/public/admin/analysis")({
           // 1. Fetch transactions
           const { data: txs, error: txError } = await supabaseAdmin
             .from("desenrola_pix_transactions")
-            .select("cpf, status");
+            .select("cpf, status")
+            .limit(10000);
 
           if (txError) {
             console.error("[admin/analysis] query error", txError);
