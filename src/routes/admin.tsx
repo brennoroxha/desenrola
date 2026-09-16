@@ -913,6 +913,21 @@ function AdminPage() {
                     style={{ padding: "8px 16px", background: "#fafafa", color: "#09090b", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
                     {gwSaving ? "Salvando..." : "Salvar credenciais"}
                   </button>
+
+                  <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #27272a" }}>
+                    <div style={{ fontSize: 12, color: "#a1a1aa", marginBottom: 4 }}>URL do Webhook (Copie e cole no painel {g})</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input type="text" readOnly value={`${window.location.origin}/api/public/pix/webhook${g === "freepay" ? "" : `/${g}`}`}
+                        style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #3f3f46", background: "#18181b", color: "#a1a1aa", fontSize: 13, outline: "none" }} />
+                      <button onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/api/public/pix/webhook${g === "freepay" ? "" : `/${g}`}`);
+                        alert("URL do webhook copiada!");
+                      }}
+                        style={{ padding: "8px 16px", background: "#27272a", color: "#fafafa", border: "1px solid #3f3f46", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
