@@ -554,8 +554,8 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
   const isMangofy = typeof payload.payment_code === "string" || src.includes("mangofy");
   if (isMangofy) {
     return {
-      id: String(payload.payment_code ?? ""),
-      status: String(payload.payment_status ?? "").toUpperCase(),
+      id: String(payload.payment_code ?? payload.id ?? payload.external_code ?? payload.transaction_id ?? ""),
+      status: String(payload.payment_status ?? payload.status ?? "").toUpperCase(),
       paidAt: payload.approved_at ?? null,
       gateway: "mangofy",
     };
