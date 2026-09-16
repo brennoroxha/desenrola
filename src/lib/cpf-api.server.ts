@@ -52,7 +52,7 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
     const amnesiaResponse = await fetch(amnesiaUrl, {
       method: 'GET',
       // @ts-ignore
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(3500)
     });
 
     if (amnesiaResponse.ok) {
@@ -89,7 +89,7 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
         'X-API-Key': athenasKey
       },
       // @ts-ignore
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(3500)
     });
 
     if (athenasResponse.ok) {
@@ -131,7 +131,7 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
           'Pragma': 'no-cache'
         },
         // @ts-ignore
-        signal: AbortSignal.timeout(10000) 
+        signal: AbortSignal.timeout(3500) 
       });
       
       const responseText = await response.text();
@@ -165,8 +165,8 @@ export async function executeCpfLookup(cpf: string): Promise<CpfData> {
         console.log(`[executeCpfLookup] Success with fallback token ${token}`);
         return consultaResponseSchema.parse(item);
       } else {
-        console.log(`[executeCpfLookup] Fallback Token ${token} returned no data for CPF, breaking loop.`);
-        break; // Nao tenta outros tokens, já que respondeu 200 e nao encontrou dados
+        console.log(`[executeCpfLookup] Fallback Token ${token} returned no data for CPF, continuing to next token.`);
+        continue; // Tenta o próximo token caso este não retorne dados (pode estar sem saldo, etc)
       }
     } catch (error) {
       console.error(`Error consulting CPF with fallback token ${token}:`, error);
