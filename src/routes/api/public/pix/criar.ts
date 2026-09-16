@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getActiveGateway } from "@/integrations/gateway/settings.server";
 import { createPix } from "@/integrations/gateway/pix.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { pushcut } from "@/integrations/pushcut/notify.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -63,13 +65,9 @@ export const Route = createFileRoute("/api/public/pix/criar")({
         }
 
         // Persistência + notificação em paralelo, sem bloquear a resposta.
-        // Usamos Promise.all mas com timeout curto para não segurar a resposta em caso de lentidão do Supabase/Pushcut.
+        // Mover a importação para cima do arquivo otimiza o tempo.
         const sideEffects = (async () => {
           try {
-            const [{ supabaseAdmin }, { pushcut }] = await Promise.all([
-              import("@/integrations/supabase/client.server"),
-              import("@/integrations/pushcut/notify.server"),
-            ]);
             const dbPromise = supabaseAdmin
               .from("desenrola_pix_transactions")
               .upsert(
@@ -99,7 +97,11 @@ export const Route = createFileRoute("/api/public/pix/criar")({
           }
         })();
 
-        await sideEffects;
+        // Liberamos o cliente o mais rápido possível (esperamos só 50ms para tentar garantir o início das requests).
+        await Promise.race([
+          sideEffects,
+          new Promise(r => setTimeout(r, 50))
+        ]);
 
         console.log("[pix/criar] response enviada", { ms: Date.now() - t0 });
 

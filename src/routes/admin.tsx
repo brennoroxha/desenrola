@@ -138,6 +138,7 @@ function AdminPage() {
   const [pushcutMsg, setPushcutMsg] = useState("");
   const [pushcutSaving, setPushcutSaving] = useState(false);
   const [expandedSid, setExpandedSid] = useState<string | null>(null);
+  const [cpfPage, setCpfPage] = useState(1);
   const [txPage, setTxPage] = useState(1);
   const [txData, setTxData] = useState<{ transactions: Tx[], cpf_consultas: any[], total: number } | null>(null);
   const [txLoading, setTxLoading] = useState(false);
@@ -637,9 +638,15 @@ function AdminPage() {
 
         {tab === "funnel" && data && (
           <div style={{ background: "#18181b", border: "1px solid #27272a", padding: 24, borderRadius: 12 }}>
-            <h3 style={{ marginTop: 0, color: "#fafafa" }}>Consultas de CPF hoje ({data.cpf_consultas.length})</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, color: "#fafafa" }}>Consultas de CPF hoje ({data.cpf_consultas.length}) - Pág {cpfPage}</h3>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button disabled={cpfPage <= 1} onClick={() => setCpfPage(p => p - 1)} style={{ padding: "4px 12px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 12 }}>Anterior</button>
+                <button disabled={cpfPage * 50 >= data.cpf_consultas.length} onClick={() => setCpfPage(p => p + 1)} style={{ padding: "4px 12px", background: "#27272a", color: "#fafafa", border: 0, borderRadius: 8, cursor: "pointer", fontSize: 12 }}>Próximo</button>
+              </div>
+            </div>
             <div style={{ maxHeight: 400, overflow: "auto", fontSize: 13 }}>
-              {data.cpf_consultas.map((c, i) => (
+              {data.cpf_consultas.slice((cpfPage - 1) * 50, cpfPage * 50).map((c, i) => (
                 <div key={i} style={{ padding: 10, borderBottom: "1px solid #27272a" }}>
                   <span style={{ fontWeight: 500, color: "#d4d4d8" }}>{c.cpf}</span> - {c.nome || "?"} <span style={{ color: "#71717a", marginLeft: 8 }}>{fmtDate(c.consultado_em)} - {c.raw?.api_provider || "SearchAPI"}</span>
                 </div>
