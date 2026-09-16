@@ -324,6 +324,14 @@ function PagamentoPage() {
                     {copied ? "✔ Código copiado!" : "Copiar código PIX"}
                   </button>
                 </div>
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "14px 16px", marginBottom: 16, fontSize: 13, color: "#334155", lineHeight: 1.6 }}>
+                  <strong style={{ display: "block", marginBottom: 8, color: "#0f172a" }}>Como pagar:</strong>
+                  <ol style={{ paddingLeft: 18, margin: 0 }}>
+                    <li>Abra o app do seu banco</li>
+                    <li>Escolha a opção <strong>Pagar com PIX</strong></li>
+                    <li>Escaneie o QR code ou copie o código acima</li>
+                  </ol>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#EFF6FF", borderRadius: 8, padding: "10px 14px", marginTop: 14, fontSize: 13, fontWeight: 600, color: "#1351B4" }}>
                   <span style={{ width: 8, height: 8, background: "#1351B4", borderRadius: "50%", animation: "pg-blink 1.2s infinite" }} />
                   Aguardando pagamento...
@@ -445,18 +453,13 @@ function ComprovanteUpload({ transactionId, acordo, cpf, nome }: { transactionId
   };
 
   return (
-    <div style={{ marginTop: 18, padding: 14, background: "#FFFBEB", border: "1.5px solid #F59E0B", borderRadius: 10, textAlign: "left" }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>Já realizou o pagamento?</div>
-      <div style={{ fontSize: 12, color: "#78350F", marginBottom: 10, lineHeight: 1.5 }}>
-        Envie o comprovante em PDF ou imagem (até 5MB) para acelerarmos a análise caso o sistema ainda não tenha identificado seu PIX. O envio começa automaticamente ao selecionar o arquivo.
+    <div style={{ marginTop: 20, padding: 18, background: "linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)", border: "2px dashed #D97706", borderRadius: 12, textAlign: "left", boxShadow: "0 4px 14px rgba(245, 158, 11, 0.25)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 20 }}>📄</span>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#92400E", textTransform: "uppercase" }}>Já realizou o pagamento?</div>
       </div>
-      
-      <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 16, marginTop: 12 }}>
-        <ol style={{ paddingLeft: 18, margin: 0 }}>
-          <li>Abra o app do seu banco</li>
-          <li>Escolha a opção <strong>Pagar com PIX</strong></li>
-          <li>Escaneie o QR code ou copie o código acima</li>
-        </ol>
+      <div style={{ fontSize: 13, color: "#92400E", marginBottom: 16, lineHeight: 1.5, fontWeight: 500 }}>
+        Anexe seu comprovante agora (PDF ou imagem até 5MB) para <strong>acelerarmos a baixa</strong> e seu nome ser limpo ainda mais rápido! O envio começa automaticamente ao selecionar o arquivo.
       </div>
       {status !== "ok" && (
         <input
