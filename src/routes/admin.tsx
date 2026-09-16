@@ -866,7 +866,7 @@ function AdminPage() {
           <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, padding: 24 }}>
             <h3 style={{ marginTop: 0, color: "#fafafa" }}>Gateway ativo</h3>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-              {(["freepay", "blackcat"] as const).map((g) => {
+              {(["freepay", "blackcat", "mangofy"] as const).map((g) => {
                 const isActive = gwState?.active === g;
                 const p = gwState?.providers.find((x) => x.id === g);
                 return (
@@ -880,15 +880,19 @@ function AdminPage() {
             {gwMsg && <div style={{ padding: 12, background: "#064e3b", border: "1px solid #059669", color: "#34d399", borderRadius: 8, marginBottom: 24, fontSize: 13 }}>{gwMsg}</div>}
 
             <h3 style={{ color: "#fafafa" }}>Credenciais</h3>
-            {(["freepay", "blackcat"] as const).map((g) => {
+            {(["freepay", "blackcat", "mangofy"] as const).map((g) => {
               const p = gwState?.providers.find((x) => x.id === g);
               const form = credForm[g] || { public_key: "", secret_key: "" };
               const usesPublicKey = true;
               const publicPh = g === "blackcat"
                 ? "Public Key (Blackcat)"
+                : g === "mangofy"
+                ? "Store Code (MangoFy)"
                 : "Public Key (Freepay)";
               const secretPh = g === "blackcat"
                 ? "Secret / API Key (Blackcat)"
+                : g === "mangofy"
+                ? "API Key (MangoFy)"
                 : "Secret Key (Freepay)";
               return (
                 <div key={g} style={{ background: "#09090b", border: "1px solid #27272a", padding: 16, borderRadius: 12, marginBottom: 16 }}>

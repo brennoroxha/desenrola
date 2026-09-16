@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GATEWAYS, getActiveGateway, setActiveGateway, invalidateGatewaySettingsCache } from "@/integrations/gateway/settings.server";
 import { invalidateFreepayCredentialsCache } from "@/integrations/freepay/credentials.server";
 import { invalidateBlackcatCredentialsCache } from "@/integrations/blackcat/credentials.server";
+import { invalidateMangofyCredentialsCache } from "@/integrations/mangofy/credentials.server";
 import { checkAdminAuth } from "@/lib/admin-auth.server";
 
 const CORS = {
@@ -66,6 +67,7 @@ export const Route = createFileRoute("/api/public/admin/gateway")({
             if (error) throw error;
             if (provider === "freepay") invalidateFreepayCredentialsCache();
             if (provider === "blackcat") invalidateBlackcatCredentialsCache();
+            if (provider === "mangofy") invalidateMangofyCredentialsCache();
             invalidateGatewaySettingsCache();
             return json({ ok: true }, 200);
           }

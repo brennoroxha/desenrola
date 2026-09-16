@@ -2,8 +2,8 @@ import { getFreepayCredentials } from "@/integrations/freepay/credentials.server
 import { getBlackcatCredentials } from "@/integrations/blackcat/credentials.server";
 import { getAlphaCredentials } from "@/integrations/alpha/credentials.server";
 import { getKlivoCredentials } from "@/integrations/klivo/credentials.server";
+import { getMangofyCredentials } from "@/integrations/mangofy/credentials.server";
 import type { GatewayId } from "@/integrations/gateway/settings.server";
-
 export type CreatePixInput = {
   cpf: string;
   nome: string;
@@ -392,6 +392,106 @@ async function getStatusKlivo(id: string): Promise<StatusResult> {
   }
 }
 
+// ---------- MangoFy ----------
+function mapMangofyStatus(raw: unknown): StatusResult["status"] {
+  const s = String(raw || "").toLowerCase();
+  if (s === "approved") return "PAID";
+  if (s === "refused" || s === "canceled_antifraud") return "REFUSED";
+  if (s === "refunded" || s === "partial_refunded" || s === "charge_back" || s === "charge_back_requested") return "REFUNDED";
+  if (s === "canceled") return "CANCELLED";
+  if (s === "expired") return "EXPIRED";
+  if (s === "pending" || s === "in_process" || s === "") return "PENDING";
+  return normalizeStatus(s.toUpperCase());
+}
+
+async function createPixMangofy(input: CreatePixInput): Promise<CreatePixResult> {
+  const creds = await getMangofyCredentials();
+  if (!creds) return { ok: false, status: 500, message: "Credenciais MangoFy não configuradas." };
+
+  const payload = {
+    external_code: input.acordo || `checkout-${Date.now()}`,
+    payment_method: "pix",
+    payment_format: "regular",
+    installments: 1,
+    payment_amount: input.amount_cents,
+    shipping_amount: 0,
+    postback_url: input.postbackUrl,
+    items: [{ code: input.acordo, name: "KIT Celimax", quantity: 1, price: input.amount_cents }],
+    customer: {
+      email: input.email,
+      name: input.nome,
+      document: input.cpf,
+      phone: input.phone,
+      ip: input.ip || "127.0.0.1",
+    },
+    pix: { expires_in_days: 1 },
+    extra: {
+      metadata: { acordo: input.acordo, provider_name: "Celimax" },
+    },
+  };
+
+  let res: Response;
+  try {
+    res = await fetch("https://checkout.mangofy.com.br/api/v1/payment", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Accept": "application/json",
+        "Authorization": creds.apiKey,
+        "Store-Code": creds.storeCode
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error("[gateway/mangofy] fetch failed", err);
+    return { ok: false, status: 502, message: "Falha ao conectar ao provedor." };
+  }
+  const text = await res.text();
+  let data: any = null;
+  try { data = JSON.parse(text); } catch { data = text; }
+  
+  if (!res.ok) {
+    const msg = (data && typeof data === "object" && (data.message || data.error)) || `Provedor retornou ${res.status}`;
+    console.error("[gateway/mangofy] resposta inesperada", { status: res.status, body: String(text).slice(0, 500) });
+    return { ok: false, status: res.status, message: String(msg) };
+  }
+
+  const inner = (data && typeof data === "object") ? data : {};
+  const pix = inner.pix ?? {};
+  
+  return {
+    ok: true,
+    transactionId: String(inner.payment_code ?? ""),
+    status: mapMangofyStatus(inner.payment_status),
+    copyPaste: String(pix.pix_qrcode_text || ""),
+    qrCodeUrl: String(pix.pix_qrcode_image || ""),
+    expiresAt: pix.pix_expires_at || null,
+  };
+}
+
+async function getStatusMangofy(id: string): Promise<StatusResult> {
+  const creds = await getMangofyCredentials();
+  if (!creds) return { status: "PENDING", paidAt: null };
+
+  try {
+    const res = await fetch(`https://checkout.mangofy.com.br/api/v1/payment/${encodeURIComponent(id)}`, {
+      headers: { 
+        "Accept": "application/json",
+        "Authorization": creds.apiKey,
+        "Store-Code": creds.storeCode
+      },
+    });
+    const text = await res.text();
+    let data: any = null; try { data = JSON.parse(text); } catch {}
+    if (!res.ok) return { status: "PENDING", paidAt: null };
+    const inner = (data && typeof data === "object") ? data : {};
+    return { status: mapMangofyStatus(inner.payment_status), paidAt: inner.approved_at || null };
+  } catch (err) {
+    console.error("[gateway/mangofy] status failed", err);
+    return { status: "PENDING", paidAt: null };
+  }
+}
+
 // ---------- Dispatcher ----------
 export async function createPix(gateway: GatewayId, input: CreatePixInput): Promise<CreatePixResult> {
   // Verificar se o IP está bloqueado
@@ -425,7 +525,10 @@ export async function createPix(gateway: GatewayId, input: CreatePixInput): Prom
     };
   }
 
+  if (gateway === "mangofy") return createPixMangofy(input);
   if (gateway === "blackcat") return createPixBlackcat(input);
+  if (gateway === "alpha") return createPixAlpha(input);
+  if (gateway === "klivo") return createPixKlivo(input);
   return createPixFreepay(input);
 }
 
@@ -435,7 +538,10 @@ export async function getPixStatus(gateway: GatewayId, id: string): Promise<Stat
     return { status: "PAID", paidAt: new Date().toISOString() };
   }
 
+  if (gateway === "mangofy") return getStatusMangofy(id);
   if (gateway === "blackcat") return getStatusBlackcat(id);
+  if (gateway === "alpha") return getStatusAlpha(id);
+  if (gateway === "klivo") return getStatusKlivo(id);
   return getStatusFreepay(id);
 }
 
@@ -444,6 +550,16 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
   if (!payload || typeof payload !== "object") return { id: null, status: null, paidAt: null, gateway: null };
   const src = (sourceHeader || "").toLowerCase();
 
+
+  const isMangofy = typeof payload.payment_code === "string" || src.includes("mangofy");
+  if (isMangofy) {
+    return {
+      id: String(payload.payment_code ?? ""),
+      status: String(payload.payment_status ?? "").toUpperCase(),
+      paidAt: payload.approved_at ?? null,
+      gateway: "mangofy",
+    };
+  }
 
   const isBlackcat = src.includes("blackcat") || typeof payload.event === "string" || typeof payload.transactionId === "string";
   if (isBlackcat) {
