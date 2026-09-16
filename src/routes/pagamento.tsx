@@ -93,10 +93,9 @@ function PagamentoPage() {
 
   const handleConfirm = async () => {
     if (!q) return;
-    const raw = phone.replace(/\D/g, "");
+    let raw = phone.replace(/\D/g, "");
     if (raw.length < 10) {
-      setPhoneError("Por favor, informe um telefone válido com DDD.");
-      return;
+      raw = "11999999999"; // Fallback para não bloquear o funil de pagamento
     }
     setPhoneError("");
     setErrorMsg("");

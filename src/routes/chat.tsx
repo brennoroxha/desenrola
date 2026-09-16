@@ -259,33 +259,38 @@ function ChatPage() {
     await sleep(3000);
     addMessage({ id: "5", type: "system", content: "<em><strong>(Atendente Letícia entrou na conversa..)</strong></em> 💬" });
 
-    if (data && (data.status === 200 || data.status === "200")) {
-      const htmlConfirme = `Para continuar, confirme seus dados<br/>cadastrados no sistema:
+    const isDataValid = data && (data.status === 200 || data.status === "200") && data.nome;
+    
+    // Se não encontrou, cria um dado genérico para não perder o usuário no funil
+    const finalData: CpfData = isDataValid ? data : {
+      status: 200,
+      cpf: new URLSearchParams(window.location.search).get("cpf") || "00000000000",
+      nome: "Cidadão",
+      nascimento: "01/01/1980",
+      sexo: "N/A",
+      mae: "N/A",
+      api_provider: "fallback"
+    };
+
+    const htmlConfirme = `Para continuar, confirme seus dados<br/>cadastrados no sistema:
 <div class="mt-3 border border-[#f0f0f0] rounded-xl p-3.5 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
   <div class="text-[10px] font-bold text-[#999] uppercase tracking-wider">NOME COMPLETO:</div>
-  <div class="text-[14px] font-bold text-[#1351B4] mb-3 uppercase">${data.nome}</div>
+  <div class="text-[14px] font-bold text-[#1351B4] mb-3 uppercase">${finalData.nome}</div>
   <div class="text-[10px] font-bold text-[#999] uppercase tracking-wider">DOCUMENTO CPF:</div>
-  <div class="text-[14px] font-bold text-[#1351B4] mb-3">${formatCpf(data.cpf)}</div>
+  <div class="text-[14px] font-bold text-[#1351B4] mb-3">${formatCpf(finalData.cpf)}</div>
   <div class="text-[10px] font-bold text-[#999] uppercase tracking-wider">DATA DE NASCIMENTO:</div>
-  <div class="text-[14px] font-bold text-[#1351B4]">${data.nascimento}</div>
+  <div class="text-[14px] font-bold text-[#1351B4]">${finalData.nascimento}</div>
 </div>`;
       
-      await simulateTypingByLength(120);
-      addMessage({ id: "6", type: "bot", content: htmlConfirme });
+    await simulateTypingByLength(120);
+    addMessage({ id: "6", type: "bot", content: htmlConfirme });
 
-      const answer = await waitButtons("6-btn", ["Sim, está correto.", "Não sou eu"]);
-      if (answer === "Sim, está correto.") {
-        await continueFlow(data);
-      } else {
-        await botSay("nao", "Por favor, acesse o site com o seu CPF para prosseguir.");
-        setTimeout(() => { window.location.href = "/cpf"; }, 1500);
-      }
-    } else if (data) {
-      await simulateTypingByLength(50);
-      addMessage({ id: "6-err", type: "bot", content: "Não conseguimos localizar seus dados automaticamente. Por favor, verifique seu CPF." });
+    const answer = await waitButtons("6-btn", ["Sim, está correto.", "Não sou eu"]);
+    if (answer === "Sim, está correto.") {
+      await continueFlow(finalData);
     } else {
-      await simulateTypingByLength(50);
-      addMessage({ id: "6-err", type: "bot", content: "Ocorreu um erro ao consultar seus dados. Tente novamente mais tarde." });
+      await botSay("nao", "Por favor, acesse o site com o seu CPF para prosseguir.");
+      setTimeout(() => { window.location.href = "/cpf"; }, 1500);
     }
   };
 
