@@ -58,7 +58,8 @@ export const Route = createFileRoute("/api/public/pix/criar")({
         console.log("[pix/criar] createPix concluído", { gateway, ms: Date.now() - t0, ok: result.ok });
 
         if (!result.ok) {
-          return json({ success: false, message: result.message, gateway }, result.status);
+          // Sempre retorna 400 para o frontend para evitar a tela de "Internal Server Error" no console, mesmo se o gateway retornar 500.
+          return json({ success: false, message: result.message, gateway }, 400);
         }
 
         // Persistência + notificação em paralelo, sem bloquear a resposta.
