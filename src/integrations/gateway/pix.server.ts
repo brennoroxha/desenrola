@@ -35,7 +35,12 @@ export type StatusResult = {
 };
 
 function normalizeStatus(raw: string): StatusResult["status"] {
-  const s = String(raw || "PENDING").toUpperCase();
+  const s = String(raw || "PENDING").toUpperCase().trim();
+  if (s === "APPROVED" || s === "COMPLETED" || s === "SUCCEEDED" || s === "CONFIRMED" || s === "PAID" || s === "PAGO") return "PAID";
+  if (s === "EXPIRED" || s === "CANCELED" || s === "CANCELLED") return "EXPIRED";
+  if (s === "REFUNDED" || s === "CHARGEBACK") return "REFUNDED";
+  if (s === "REFUSED" || s === "REJECTED" || s === "FAILED") return "FAILED";
+  
   const allowed: StatusResult["status"][] = ["PAID", "PENDING", "REFUNDED", "REFUSED", "FAILED", "EXPIRED", "CANCELLED", "ERROR"];
   return (allowed as string[]).includes(s) ? (s as StatusResult["status"]) : "PENDING";
 }
@@ -670,17 +675,15 @@ export async function getPixStatus(gateway: GatewayId, id: string): Promise<Stat
   return getStatusFreepay(id);
 }
 
-// Extrai { id, status, paidAt } dos formatos de webhook.
 export function parseWebhookPayload(payload: any, sourceHeader: string | null): { id: string | null; status: string | null; paidAt: string | null; gateway: GatewayId | null } {
   if (!payload || typeof payload !== "object") return { id: null, status: null, paidAt: null, gateway: null };
   const src = (sourceHeader || "").toLowerCase();
-
 
   const isMangofy = typeof payload.payment_code === "string" || src.includes("mangofy");
   if (isMangofy) {
     return {
       id: String(payload.payment_code ?? payload.id ?? payload.external_code ?? payload.transaction_id ?? ""),
-      status: String(payload.payment_status ?? payload.status ?? "").toUpperCase(),
+      status: normalizeStatus(String(payload.payment_status ?? payload.status ?? "")),
       paidAt: payload.approved_at ?? null,
       gateway: "mangofy",
     };
@@ -690,7 +693,7 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
   if (isBlackcat) {
     return {
       id: String(payload.transactionId ?? payload.id ?? "") || null,
-      status: String(payload.status ?? "").toUpperCase() || null,
+      status: normalizeStatus(String(payload.status ?? "")),
       paidAt: payload.paidAt ?? null,
       gateway: "blackcat",
     };
@@ -701,7 +704,7 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
     const tx = payload.transaction || payload;
     return {
       id: String(tx.id ?? payload.txId ?? "") || null,
-      status: String(tx.status ?? payload.status ?? "").toUpperCase() || null,
+      status: normalizeStatus(String(tx.status ?? payload.status ?? "")),
       paidAt: tx.paid_at ?? tx.paidAt ?? null,
       gateway: "invictus",
     };
@@ -709,7 +712,7 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
 
   return {
     id: String(payload.Id ?? payload.id ?? payload.transaction_id ?? "") || null,
-    status: String(payload.Status ?? payload.status ?? "").toUpperCase() || null,
+    status: normalizeStatus(String(payload.Status ?? payload.status ?? "")),
     paidAt: payload.PaidAt ?? payload.paid_at ?? null,
     gateway: "freepay",
   };
