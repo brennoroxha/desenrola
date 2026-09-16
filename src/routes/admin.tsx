@@ -883,11 +883,13 @@ function AdminPage() {
             {(["freepay", "blackcat", "mangofy", "invictus"] as const).map((g) => {
               const p = gwState?.providers.find((x) => x.id === g);
               const form = credForm[g] || { public_key: "", secret_key: "" };
-              const usesPublicKey = g !== "invictus";
+              const usesPublicKey = true;
               const publicPh = g === "blackcat"
                 ? "Public Key (Blackcat)"
                 : g === "mangofy"
                 ? "Store Code (MangoFy)"
+                : g === "invictus"
+                ? "Offer Hash (Invictus)"
                 : "Public Key (Freepay)";
               const secretPh = g === "blackcat"
                 ? "Secret / API Key (Blackcat)"

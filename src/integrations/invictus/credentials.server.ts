@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export type InvictusCredentials = {
   apiKey: string;
+  offerHash?: string;
 };
 
 let cache: { data: InvictusCredentials | null; fetchedAt: number } | null = null;
@@ -14,7 +15,7 @@ export async function getInvictusCredentials(): Promise<InvictusCredentials | nu
   try {
     const { data } = await supabaseAdmin
       .from("desenrola_api_credentials")
-      .select("secret_key")
+      .select("public_key, secret_key")
       .eq("provider", "invictus")
       .maybeSingle();
 
@@ -25,6 +26,7 @@ export async function getInvictusCredentials(): Promise<InvictusCredentials | nu
 
     const creds: InvictusCredentials = {
       apiKey: data.secret_key,
+      offerHash: data.public_key || undefined,
     };
     cache = { data: creds, fetchedAt: now };
     return creds;

@@ -520,12 +520,19 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
       phone: input.phone,
     },
     items: [
-      {
-        quantity: 1,
-        amount: input.amount_cents,
-        description: input.acordo || "Pagamento PIX",
-        externalRef: input.acordo,
-      }
+      creds.offerHash
+        ? {
+            quantity: 1,
+            amount: input.amount_cents,
+            offer_hash: creds.offerHash,
+            externalRef: input.acordo,
+          }
+        : {
+            quantity: 1,
+            amount: input.amount_cents,
+            description: input.acordo || "Pagamento PIX",
+            externalRef: input.acordo,
+          }
     ],
     pix: {
       expirationInSeconds: 86400,
