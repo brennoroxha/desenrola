@@ -75,23 +75,42 @@ export const Route = createFileRoute("/api/public/admin/data")({
           const startISO = start.toISOString();
           const endISO = end.toISOString();
 
+          const fetchAll = async (builderFn: (from: number, to: number) => any, max: number) => {
+            let all: any[] = [];
+            let from = 0;
+            const size = 1000;
+            let lastError = null;
+            while (all.length < max) {
+              const res = await builderFn(from, from + size - 1);
+              if (res.error) {
+                lastError = res.error;
+                break;
+              }
+              const d = res.data || [];
+              all = all.concat(d);
+              if (d.length < size) break;
+              from += size;
+            }
+            return { data: all, error: lastError };
+          };
+
           const [events, tx, comprovantes, cpfConsultas] = await Promise.all([
-            supabaseAdmin.from("desenrola_page_events")
+            fetchAll((from, to) => supabaseAdmin.from("desenrola_page_events")
               .select("*")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).limit(50000),
-            supabaseAdmin.from("desenrola_pix_transactions")
+              .order("criado_em", { ascending: false }).range(from, to), 50000),
+            fetchAll((from, to) => supabaseAdmin.from("desenrola_pix_transactions")
               .select("*")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).limit(10000),
-            supabaseAdmin.from("desenrola_comprovantes")
+              .order("criado_em", { ascending: false }).range(from, to), 10000),
+            fetchAll((from, to) => supabaseAdmin.from("desenrola_comprovantes")
               .select("id, transaction_id, acordo, cpf, nome, filename, mime, size_bytes, ip, criado_em")
               .gte("criado_em", startISO).lte("criado_em", endISO)
-              .order("criado_em", { ascending: false }).limit(5000),
-            supabaseAdmin.from("desenrola_cpf_consultas")
+              .order("criado_em", { ascending: false }).range(from, to), 5000),
+            fetchAll((from, to) => supabaseAdmin.from("desenrola_cpf_consultas")
               .select("cpf, nome, consultado_em, raw, nascimento, sexo")
               .gte("consultado_em", startISO).lte("consultado_em", endISO)
-              .order("consultado_em", { ascending: false }).limit(10000),
+              .order("consultado_em", { ascending: false }).range(from, to), 10000),
           ]);
 
           const dbError =
