@@ -49,6 +49,8 @@ export const Route = createFileRoute("/api/public/pix/criar")({
           acordo: b.acordo,
           postbackUrl: gateway === "blackcat"
             ? `${origin}/api/public/pix/webhook/blackcat`
+            : gateway === "invictus"
+            ? `${origin}/api/public/pix/webhook/invictus`
             : `${origin}/api/public/pix/webhook`,
           ip: request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || undefined,
         });

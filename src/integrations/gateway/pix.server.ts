@@ -3,6 +3,7 @@ import { getBlackcatCredentials } from "@/integrations/blackcat/credentials.serv
 import { getAlphaCredentials } from "@/integrations/alpha/credentials.server";
 import { getKlivoCredentials } from "@/integrations/klivo/credentials.server";
 import { getMangofyCredentials } from "@/integrations/mangofy/credentials.server";
+import { getInvictusCredentials } from "@/integrations/invictus/credentials.server";
 import type { GatewayId } from "@/integrations/gateway/settings.server";
 export type CreatePixInput = {
   cpf: string;
@@ -492,6 +493,106 @@ async function getStatusMangofy(id: string): Promise<StatusResult> {
   }
 }
 
+// ---------- InvictusPay ----------
+function mapInvictusStatus(raw: unknown): StatusResult["status"] {
+  const s = String(raw || "").toLowerCase();
+  if (s === "paid") return "PAID";
+  if (s === "refused") return "REFUSED";
+  if (s === "refunded") return "REFUNDED";
+  if (s === "cancelled") return "CANCELLED";
+  if (s === "expired") return "EXPIRED";
+  if (s === "pending" || s === "processing" || s === "antifraud") return "PENDING";
+  if (s === "failed") return "FAILED";
+  return normalizeStatus(s.toUpperCase());
+}
+
+async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult> {
+  const creds = await getInvictusCredentials();
+  if (!creds) return { ok: false, status: 500, message: "Credenciais InvictusPay não configuradas." };
+
+  const payload = {
+    amount: input.amount_cents,
+    paymentMethod: "pix",
+    customer: {
+      name: input.nome,
+      email: input.email,
+      document: input.cpf,
+      phone: input.phone,
+    },
+    items: [
+      {
+        quantity: 1,
+        amount: input.amount_cents,
+        description: input.acordo || "Pagamento PIX",
+        externalRef: input.acordo,
+      }
+    ],
+    pix: {
+      expirationInSeconds: 86400,
+    },
+    postbackUrl: input.postbackUrl,
+  };
+
+  let res: Response;
+  try {
+    res = await fetch("https://api.invictuspayv2.com.br/api/v1/transactions", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Accept": "application/json",
+        "X-Api-Key": creds.apiKey
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error("[gateway/invictus] fetch failed", err);
+    return { ok: false, status: 502, message: "Falha ao conectar ao provedor." };
+  }
+  const text = await res.text();
+  let data: any = null;
+  try { data = JSON.parse(text); } catch { data = text; }
+  
+  if (!res.ok) {
+    const msg = (data && typeof data === "object" && (data.message || data.error)) || `Provedor retornou ${res.status}`;
+    console.error("[gateway/invictus] resposta inesperada", { status: res.status, body: String(text).slice(0, 500) });
+    return { ok: false, status: res.status, message: String(msg) };
+  }
+
+  const inner = (data && typeof data === "object") ? data : {};
+  const pix = inner.pix ?? {};
+  
+  return {
+    ok: true,
+    transactionId: String(inner.id ?? inner.txId ?? ""),
+    status: mapInvictusStatus(inner.status),
+    copyPaste: String(pix.qrCode || pix.qrcode || pix.copyPaste || ""),
+    qrCodeUrl: String(pix.qrCodeUrl || pix.qrCodeImage || ""),
+    expiresAt: pix.expiresAt || null,
+  };
+}
+
+async function getStatusInvictus(id: string): Promise<StatusResult> {
+  const creds = await getInvictusCredentials();
+  if (!creds) return { status: "PENDING", paidAt: null };
+
+  try {
+    const res = await fetch(`https://api.invictuspayv2.com.br/api/v1/transactions/${encodeURIComponent(id)}`, {
+      headers: { 
+        "Accept": "application/json",
+        "X-Api-Key": creds.apiKey
+      },
+    });
+    const text = await res.text();
+    let data: any = null; try { data = JSON.parse(text); } catch {}
+    if (!res.ok) return { status: "PENDING", paidAt: null };
+    const inner = (data && typeof data === "object") ? data : {};
+    return { status: mapInvictusStatus(inner.status), paidAt: inner.paidAt || null };
+  } catch (err) {
+    console.error("[gateway/invictus] status failed", err);
+    return { status: "PENDING", paidAt: null };
+  }
+}
+
 // ---------- Dispatcher ----------
 export async function createPix(gateway: GatewayId, input: CreatePixInput): Promise<CreatePixResult> {
   // Verificar se o IP está bloqueado
@@ -526,6 +627,7 @@ export async function createPix(gateway: GatewayId, input: CreatePixInput): Prom
   }
 
   if (gateway === "mangofy") return createPixMangofy(input);
+  if (gateway === "invictus") return createPixInvictus(input);
   if (gateway === "blackcat") return createPixBlackcat(input);
   if (gateway === "alpha") return createPixAlpha(input);
   if (gateway === "klivo") return createPixKlivo(input);
@@ -539,6 +641,7 @@ export async function getPixStatus(gateway: GatewayId, id: string): Promise<Stat
   }
 
   if (gateway === "mangofy") return getStatusMangofy(id);
+  if (gateway === "invictus") return getStatusInvictus(id);
   if (gateway === "blackcat") return getStatusBlackcat(id);
   if (gateway === "alpha") return getStatusAlpha(id);
   if (gateway === "klivo") return getStatusKlivo(id);
@@ -570,6 +673,17 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
       gateway: "blackcat",
     };
   }
+
+  const isInvictus = src.includes("invictus") || (payload.paymentMethod === "pix" && payload.customer && payload.items) || typeof payload.txId === "string";
+  if (isInvictus) {
+    return {
+      id: String(payload.id ?? payload.txId ?? "") || null,
+      status: String(payload.status ?? "").toUpperCase() || null,
+      paidAt: payload.paidAt ?? null,
+      gateway: "invictus",
+    };
+  }
+
   return {
     id: String(payload.Id ?? payload.id ?? payload.transaction_id ?? "") || null,
     status: String(payload.Status ?? payload.status ?? "").toUpperCase() || null,

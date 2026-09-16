@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-export type GatewayId = "freepay" | "blackcat" | "alpha" | "klivo" | "mangofy";
-export const GATEWAYS: GatewayId[] = ["freepay", "blackcat", "alpha", "klivo", "mangofy"];
+export type GatewayId = "freepay" | "blackcat" | "alpha" | "klivo" | "mangofy" | "invictus";
+export const GATEWAYS: GatewayId[] = ["freepay", "blackcat", "alpha", "klivo", "mangofy", "invictus"];
 
 const TTL_MS = 60 * 1000;
 let cache: { value: GatewayId; fetchedAt: number } | null = null;
