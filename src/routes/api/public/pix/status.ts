@@ -30,7 +30,7 @@ export const Route = createFileRoute("/api/public/pix/status")({
             .eq("transaction_id", id)
             .maybeSingle();
           if (row) {
-            if (row.gateway === "blackcat" || row.gateway === "freepay" || row.gateway === "alpha" || row.gateway === "klivo" || row.gateway === "mangofy") gateway = row.gateway as GatewayId;
+            if (row.gateway === "blackcat" || row.gateway === "freepay" || row.gateway === "alpha" || row.gateway === "klivo" || row.gateway === "mangofy" || row.gateway === "invictus") gateway = row.gateway as GatewayId;
             if (row.status && String(row.status).toUpperCase() === "PAID") {
               return json({ status: "PAID", paidAt: row.paid_at || null }, 200);
             }

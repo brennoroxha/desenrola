@@ -704,11 +704,11 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
     };
   }
 
-  const isInvictus = src.includes("invictus") || typeof payload.transaction?.id === "string" || typeof payload.txId === "string" || typeof payload.data?.transaction?.id === "string";
+  const isInvictus = src.includes("invictus") || typeof payload.transaction?.id === "string" || typeof payload.txId === "string" || typeof payload.data?.transaction?.id === "string" || typeof payload.transactionId === "string";
   if (isInvictus) {
     const tx = payload.transaction || payload.data?.transaction || payload.data || payload;
     return {
-      id: String(tx.id ?? payload.txId ?? "") || null,
+      id: String(tx.id ?? tx.txId ?? tx.transactionId ?? payload.txId ?? payload.transactionId ?? "") || null,
       status: normalizeStatus(String(tx.status ?? payload.status ?? "")),
       paidAt: tx.paid_at ?? tx.paidAt ?? payload.paidAt ?? payload.paid_at ?? null,
       gateway: "invictus",
