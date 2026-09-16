@@ -585,16 +585,12 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
     return { ok: false, status: res.status, message: String(msg) };
   }
 
-  const inner = (data && typeof data === "object") ? data : {};
+  const outer = (data && typeof data === "object") ? data : {};
+  const inner = outer.data || outer;
   const pix = inner.pix ?? {};
   
-  let copyPaste = String(pix.qrCode || pix.qrcode || pix.copyPaste || inner.qrCode || inner.qrcode || inner.qr_code || inner.pix_qrcode || inner.copy_paste || "");
-  const qrUrl = String(pix.qrCodeUrl || pix.qrCodeImage || inner.qrCodeUrl || inner.qrcode_url || inner.qr_code_url || "");
-
-  if (!copyPaste) {
-    // Retorna o JSON inteiro na tela para debugarmos onde a InvictusPay colocou o PIX.
-    copyPaste = JSON.stringify(inner).slice(0, 300);
-  }
+  const copyPaste = String(pix.qrCode || pix.qrcode || pix.copyPaste || pix.qr_code || inner.qrCode || inner.qrcode || inner.qr_code || inner.pix_qrcode || inner.copy_paste || "");
+  const qrUrl = String(pix.qrCodeUrl || pix.qrCodeImage || pix.qr_code_url || inner.qrCodeUrl || inner.qrcode_url || inner.qr_code_url || "");
 
   return {
     ok: true,
@@ -602,7 +598,7 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
     status: mapInvictusStatus(inner.status),
     copyPaste: copyPaste,
     qrCodeUrl: qrUrl,
-    expiresAt: pix.expiresAt || inner.expiresAt || inner.expires_at || null,
+    expiresAt: pix.expiresAt || pix.expires_at || inner.expiresAt || inner.expires_at || null,
   };
 }
 
