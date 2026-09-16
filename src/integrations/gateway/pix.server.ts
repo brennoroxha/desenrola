@@ -616,8 +616,9 @@ async function getStatusInvictus(id: string): Promise<StatusResult> {
     const text = await res.text();
     let data: any = null; try { data = JSON.parse(text); } catch {}
     if (!res.ok) return { status: "PENDING", paidAt: null };
-    const inner = (data && typeof data === "object") ? data : {};
-    return { status: mapInvictusStatus(inner.status), paidAt: inner.paidAt || null };
+    const outer = (data && typeof data === "object") ? data : {};
+    const inner = outer.data || outer;
+    return { status: mapInvictusStatus(inner.status), paidAt: inner.paidAt || inner.paid_at || null };
   } catch (err) {
     console.error("[gateway/invictus] status failed", err);
     return { status: "PENDING", paidAt: null };
@@ -703,13 +704,13 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
     };
   }
 
-  const isInvictus = src.includes("invictus") || typeof payload.transaction?.id === "string" || typeof payload.txId === "string";
+  const isInvictus = src.includes("invictus") || typeof payload.transaction?.id === "string" || typeof payload.txId === "string" || typeof payload.data?.transaction?.id === "string";
   if (isInvictus) {
-    const tx = payload.transaction || payload;
+    const tx = payload.transaction || payload.data?.transaction || payload.data || payload;
     return {
       id: String(tx.id ?? payload.txId ?? "") || null,
       status: normalizeStatus(String(tx.status ?? payload.status ?? "")),
-      paidAt: tx.paid_at ?? tx.paidAt ?? null,
+      paidAt: tx.paid_at ?? tx.paidAt ?? payload.paidAt ?? payload.paid_at ?? null,
       gateway: "invictus",
     };
   }
