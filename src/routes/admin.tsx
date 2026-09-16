@@ -98,8 +98,32 @@ function fmtBRL(cents: number) {
 
 function fmtDate(iso: string) {
   try {
-    return new Date(iso).toLocaleString("pt-BR", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    let d = iso;
+    if (!d.includes("T")) d = d.replace(" ", "T");
+    if (!d.endsWith("Z") && !d.includes("-0") && !d.includes("+0")) d += "Z";
+    return new Date(d).toLocaleString("pt-BR", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
   } catch { return iso; }
+}
+
+const ipCache = new Map<string, string>();
+function IPLocation({ ip }: { ip: string }) {
+  const [loc, setLoc] = useState<string | null>(ipCache.get(ip) || null);
+  useEffect(() => {
+    if (!ip || loc) return;
+    fetch(`https://ipapi.co/${ip}/json/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.city && data.region) {
+          const l = `${data.city}, ${data.region}`;
+          ipCache.set(ip, l);
+          setLoc(l);
+        }
+      })
+      .catch(() => {});
+  }, [ip, loc]);
+  
+  if (!loc) return null;
+  return <span style={{ color: "#a1a1aa", marginLeft: 8 }}>📍 {loc}</span>;
 }
 
 function AdminPage() {
@@ -604,7 +628,7 @@ function AdminPage() {
                     <div>
                       <div style={{ fontWeight: 600, color: "#fafafa" }}>{s.nome || "—"} <span style={{ color: "#a1a1aa", fontWeight: 400 }}>{s.cpf || ""}</span></div>
                       <div style={{ fontSize: 12, color: "#a1a1aa", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
-                        <span>IP {s.ip || "—"} · {fmtDate(s.first)} → {fmtDate(s.last)}</span>
+                        <span>IP {s.ip || "—"} {s.ip && <IPLocation ip={s.ip} />} · {fmtDate(s.first)} → {fmtDate(s.last)}</span>
                       </div>
                       <div style={{ fontSize: 12, color: "#38bdf8", marginTop: 4 }}>Origem: {s.origem.label} <span style={{ color: "#71717a" }}>({s.origem.detail})</span></div>
                       <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
