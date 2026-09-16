@@ -866,7 +866,7 @@ function AdminPage() {
           <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12, padding: 24 }}>
             <h3 style={{ marginTop: 0, color: "#fafafa" }}>Gateway ativo</h3>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-              {(["freepay", "blackcat", "mangofy", "invictus", "alpha", "klivo"] as const).map((g) => {
+              {(["freepay", "blackcat", "mangofy", "invictus"] as const).map((g) => {
                 const isActive = gwState?.active === g;
                 const p = gwState?.providers.find((x) => x.id === g);
                 return (
@@ -880,7 +880,7 @@ function AdminPage() {
             {gwMsg && <div style={{ padding: 12, background: "#064e3b", border: "1px solid #059669", color: "#34d399", borderRadius: 8, marginBottom: 24, fontSize: 13 }}>{gwMsg}</div>}
 
             <h3 style={{ color: "#fafafa" }}>Credenciais</h3>
-            {(["freepay", "blackcat", "mangofy", "invictus", "alpha", "klivo"] as const).map((g) => {
+            {(["freepay", "blackcat", "mangofy", "invictus"] as const).map((g) => {
               const p = gwState?.providers.find((x) => x.id === g);
               const form = credForm[g] || { public_key: "", secret_key: "" };
               const usesPublicKey = g !== "invictus";
@@ -888,10 +888,6 @@ function AdminPage() {
                 ? "Public Key (Blackcat)"
                 : g === "mangofy"
                 ? "Store Code (MangoFy)"
-                : g === "alpha"
-                ? "Public Key (Alpha)"
-                : g === "klivo"
-                ? "Offer Hash (Klivo)"
                 : "Public Key (Freepay)";
               const secretPh = g === "blackcat"
                 ? "Secret / API Key (Blackcat)"
@@ -899,10 +895,6 @@ function AdminPage() {
                 ? "API Key (MangoFy)"
                 : g === "invictus"
                 ? "API Key (Invictus)"
-                : g === "klivo"
-                ? "API Token (Klivo)"
-                : g === "alpha"
-                ? "Secret Key (Alpha)"
                 : "Secret Key (Freepay)";
               return (
                 <div key={g} style={{ background: "#09090b", border: "1px solid #27272a", padding: 16, borderRadius: 12, marginBottom: 16 }}>
@@ -912,9 +904,11 @@ function AdminPage() {
                       {p?.configured ? `Configurado${p.atualizado_em ? ` · ${fmtDate(p.atualizado_em)}` : ""}` : "Não configurado"}
                     </div>
                   </div>
-                  <input type="text" placeholder={publicPh} value={form.public_key}
-                    onChange={(e) => setCredForm((prev) => ({ ...prev, [g]: { ...form, public_key: e.target.value } }))}
-                    style={{ width: "100%", padding: 10, marginBottom: 8, borderRadius: 8, border: "1px solid #3f3f46", background: "#18181b", color: "#fafafa", fontSize: 13, outline: "none" }} />
+                  {usesPublicKey && (
+                    <input type="text" placeholder={publicPh} value={form.public_key}
+                      onChange={(e) => setCredForm((prev) => ({ ...prev, [g]: { ...form, public_key: e.target.value } }))}
+                      style={{ width: "100%", padding: 10, marginBottom: 8, borderRadius: 8, border: "1px solid #3f3f46", background: "#18181b", color: "#fafafa", fontSize: 13, outline: "none" }} />
+                  )}
                   <input type="password" placeholder={secretPh} value={form.secret_key}
                     onChange={(e) => setCredForm((prev) => ({ ...prev, [g]: { ...form, secret_key: e.target.value } }))}
                     style={{ width: "100%", padding: 10, marginBottom: 12, borderRadius: 8, border: "1px solid #3f3f46", background: "#18181b", color: "#fafafa", fontSize: 13, outline: "none" }} />
