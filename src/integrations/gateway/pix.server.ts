@@ -106,7 +106,7 @@ async function getStatusFreepay(id: string): Promise<StatusResult> {
     const text = await res.text();
     let data: any = null; try { data = JSON.parse(text); } catch {}
     if (!res.ok) return { status: "PENDING", paidAt: null };
-    const inner = data?.data ?? data;
+    const inner = Array.isArray(data?.data) ? data.data[0] : data?.data ?? data;
     return { status: normalizeStatus(inner?.status), paidAt: inner?.paid_at || null };
   } catch (err) {
     console.error("[gateway/freepay] status failed", err);
@@ -715,10 +715,11 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
     };
   }
 
+  const fp = payload.data ?? payload;
   return {
-    id: String(payload.Id ?? payload.id ?? payload.transaction_id ?? "") || null,
-    status: normalizeStatus(String(payload.Status ?? payload.status ?? "")),
-    paidAt: payload.PaidAt ?? payload.paid_at ?? null,
+    id: String(fp.Id ?? fp.id ?? fp.transaction_id ?? "") || null,
+    status: normalizeStatus(String(fp.Status ?? fp.status ?? "")),
+    paidAt: fp.PaidAt ?? fp.paid_at ?? null,
     gateway: "freepay",
   };
 }
