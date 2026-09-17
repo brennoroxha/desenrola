@@ -34,32 +34,37 @@ export function invalidatePushcutCache() {
   cachedUrls.lastFetch = 0;
 }
 
-export async function pushcut(kind: "gerado" | "aprovado", valor?: string | number | null) {
+export function pushcut(kind: "gerado" | "aprovado", valor?: string | number | null) {
   if (process.env.VITE_USE_MOCKS === "true") {
     console.log(`[mock] pushcut interceptado: ${kind}`, valor);
-    return;
+    return Promise.resolve();
   }
 
-  try {
-    const urls = await getPushcutUrls();
-    const targetUrl = urls[kind];
+  // Dispara em background para não bloquear a resposta da API
+  Promise.resolve().then(async () => {
+    try {
+      const urls = await getPushcutUrls();
+      const targetUrl = urls[kind];
 
-    if (!targetUrl) {
-      console.log(`[pushcut] Nenhuma URL configurada para o evento: ${kind}`);
-      return;
+      if (!targetUrl) {
+        console.log(`[pushcut] Nenhuma URL configurada para o evento: ${kind}`);
+        return;
+      }
+
+      const label = kind === "aprovado" ? "Pagamento Aprovado 💰\nDesenrola" : "Desenrola Gerado ✨";
+      const valorFmt = valor ? `R$ ${valor}` : "";
+      
+      const res = await fetch(targetUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: label, text: valorFmt }),
+      });
+      
+      if (!res.ok) console.error("[pushcut]", kind, res.status, await res.text().catch(() => ""));
+    } catch (err) {
+      console.error("[pushcut] failed", kind, err);
     }
+  });
 
-    const label = kind === "aprovado" ? "Pagamento Aprovado 💰\nDesenrola" : "Desenrola Gerado ✨";
-    const valorFmt = valor ? `R$ ${valor}` : "";
-    
-    const res = await fetch(targetUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: label, text: valorFmt }),
-    });
-    
-    if (!res.ok) console.error("[pushcut]", kind, res.status, await res.text().catch(() => ""));
-  } catch (err) {
-    console.error("[pushcut] failed", kind, err);
-  }
+  return Promise.resolve();
 }
