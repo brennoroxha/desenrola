@@ -56,6 +56,17 @@ function captureOrigem(): Origem | null {
         refHost = h && h !== window.location.hostname ? h : null;
       } catch {}
     }
+    
+    let contaVal = qs.get("c") || qs.get("conta");
+    if (!contaVal) {
+      for (const k of qs.keys()) {
+        if (k.startsWith("conta") && k.length > 5) {
+          contaVal = k.substring(5);
+          break;
+        }
+      }
+    }
+
     const origem: Origem = {
       referrer: ref || null,
       referrer_host: refHost,
@@ -67,7 +78,7 @@ function captureOrigem(): Origem | null {
       gclid: qs.get("gclid"),
       fbclid: qs.get("fbclid"),
       landing: window.location.pathname || null,
-      conta: qs.get("c") || qs.get("conta"),
+      conta: contaVal,
     };
     try { window.sessionStorage.setItem(ORIGIN_KEY, JSON.stringify(origem)); } catch {}
     return origem;
