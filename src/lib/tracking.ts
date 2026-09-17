@@ -220,7 +220,7 @@ function redirectPaidUserToUpsell(tx: PendingTx) {
     meta: { transactionId: tx.transactionId, source: "pending_reconcile" },
   });
   window.setTimeout(() => {
-    window.location.assign(buildUpsellUrl(tx));
+    window.location.href = buildUpsellUrl(tx);
   }, 500);
 }
 

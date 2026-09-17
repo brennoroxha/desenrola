@@ -177,13 +177,18 @@ function PagamentoPage() {
                 const params = new URLSearchParams({
                   cpf: q.cpf || "",
                   nome: q.nome || "",
-                  phone: raw,
+                  phone: raw || "",
                   acordo: q.acordo || "",
                 });
-                // Sem rastreamento externo: segue direto para o upsell.
                 track("pagamento", "pagamento_redirect_upsell", { cpf: q.cpf, nome: q.nome, acordo: q.acordo, meta: { transactionId: data.transactionId } });
-                window.location.assign(`/upsell/taxa-corretiva?${params.toString()}`);
-              } catch {}
+                setTimeout(() => {
+                  window.location.href = `/upsell/taxa-corretiva?${params.toString()}`;
+                }, 1500);
+              } catch (e) {
+                setTimeout(() => {
+                  window.location.href = "/upsell/taxa-corretiva";
+                }, 1500);
+              }
             } else if (["FAILED", "REFUSED"].includes(j.status)) {
               stopAll();
               setStage("expired");
@@ -352,6 +357,17 @@ function PagamentoPage() {
                 <div style={{ fontSize: 14, color: "#555", lineHeight: 1.6 }}>
                   Seu nome será limpo em até <strong>72 horas úteis.</strong><br />
                   Guarde o código do acordo: <strong>{q.acordo || transactionId || "—"}</strong>
+                </div>
+                <div style={{ marginTop: 24 }}>
+                  <button 
+                    onClick={() => {
+                      const params = new URLSearchParams({ cpf: q.cpf || "", nome: q.nome || "", phone: phone.replace(/\D/g, "") || "", acordo: q.acordo || "" });
+                      window.location.href = `/upsell/taxa-corretiva?${params.toString()}`;
+                    }}
+                    style={{ ...btnPrimary, background: "#059669" }}
+                  >
+                    Prosseguir
+                  </button>
                 </div>
               </div>
             )}
