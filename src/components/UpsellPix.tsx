@@ -94,7 +94,7 @@ export function UpsellPix(props: UpsellPixProps) {
           email: "cliente@gmail.com",
           phone: raw,
           amount_cents: props.amountCents,
-          acordo: q.acordo || props.pageKey.toUpperCase(),
+          acordo: q.acordo ? `${q.acordo}-${props.pageKey}` : props.pageKey,
         }),
       });
       const data = await res.json();
@@ -140,7 +140,7 @@ export function UpsellPix(props: UpsellPixProps) {
               // Sem rastreamento externo: segue direto no fluxo.
               if (props.nextHref) {
                 const params = buildForwardParams(q);
-                setTimeout(() => { window.location.href = `${props.nextHref}?${params}`; }, 1500);
+                setTimeout(() => { window.location.href = `${props.nextHref}?${params}`; }, 500);
               }
             } else if (["FAILED", "REFUSED"].includes(j.status)) {
               stopAll();
@@ -150,7 +150,7 @@ export function UpsellPix(props: UpsellPixProps) {
               pollRef.current = null;
             }
           } catch {}
-        }, 10000);
+        }, 3000);
       }
     } catch {
       setErrorMsg("Não foi possível conectar. Verifique sua conexão.");

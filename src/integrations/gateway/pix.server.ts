@@ -131,7 +131,7 @@ async function createPixBlackcat(input: CreatePixInput): Promise<CreatePixResult
     },
     pix: { expiresInDays: 1 },
     postbackUrl: input.postbackUrl,
-    externalRef: input.acordo,
+    externalRef: input.acordo ? `${input.acordo}-${Date.now()}` : `checkout-${Date.now()}`,
     metadata: JSON.stringify({ acordo: input.acordo, provider_name: "Celimax" }),
   };
   let res: Response;
@@ -219,7 +219,7 @@ async function createPixAlpha(input: CreatePixInput): Promise<CreatePixResult> {
     amount: input.amount_cents,
     paymentMethod: "pix" as const,
     postbackUrl: input.postbackUrl,
-    externalRef: input.acordo,
+    externalRef: input.acordo ? `${input.acordo}-${Date.now()}` : `checkout-${Date.now()}`,
     ip: input.ip,
     metadata: JSON.stringify({ acordo: input.acordo, provider_name: "Celimax" }),
     pix: { expiresInDays: 1 },
@@ -415,7 +415,7 @@ async function createPixMangofy(input: CreatePixInput): Promise<CreatePixResult>
   if (!creds) return { ok: false, status: 500, message: "Credenciais MangoFy não configuradas." };
 
   const payload = {
-    external_code: input.acordo || `checkout-${Date.now()}`,
+    external_code: input.acordo ? `${input.acordo}-${Date.now()}` : `checkout-${Date.now()}`,
     payment_method: "pix",
     payment_format: "regular",
     installments: 1,
@@ -516,6 +516,7 @@ async function createPixInvictus(input: CreatePixInput): Promise<CreatePixResult
   if (!creds) return { ok: false, status: 500, message: "Credenciais InvictusPay não configuradas." };
 
   const payload = {
+    externalReference: input.acordo ? `${input.acordo}-${Date.now()}` : `checkout-${Date.now()}`,
     amount: input.amount_cents,
     paymentMethod: "pix",
     customer: {

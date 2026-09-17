@@ -188,7 +188,7 @@ function PagamentoPage() {
               pollRef.current = null;
             }
           } catch {}
-        }, 10000);
+        }, 3000);
       }
     } catch (e) {
       setErrorMsg("Não foi possível conectar. Verifique sua conexão.");
