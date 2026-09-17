@@ -77,6 +77,7 @@ function CheckoutPage() {
   const [transactionId, setTransactionId] = useState("");
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isSubmitting = useRef(false);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -133,6 +134,7 @@ function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
     const rawPhone = phone.replace(/\D/g, "");
     if (nome.trim().split(/\s+/).length < 2) return setErro("Informe seu nome completo.");
     if (!isValidEmail(email)) return setErro("Informe um e-mail válido.");
@@ -140,6 +142,7 @@ function CheckoutPage() {
     if (!isValidCPF(cpf)) return setErro("Informe um CPF válido.");
     setErro("");
     setStage("loading");
+    isSubmitting.current = true;
     track("checkout", "checkout_submit", { acordo: `EBOOK-${produto.slug}`, nome: nome.trim(), cpf: cpf.replace(/\D/g, "") });
     try {
       const res = await fetch("/api/public/pix/criar", {
@@ -158,6 +161,7 @@ function CheckoutPage() {
       if (!res.ok || !data?.success) {
         setErro(data?.message || `Não foi possível gerar o PIX (erro ${res.status}).`);
         setStage("erro");
+        isSubmitting.current = false;
         return;
       }
       const cp: string = data.copyPaste || "";
@@ -183,6 +187,7 @@ function CheckoutPage() {
     } catch {
       setErro("Falha de conexão. Tente novamente.");
       setStage("erro");
+      isSubmitting.current = false;
     }
   };
 

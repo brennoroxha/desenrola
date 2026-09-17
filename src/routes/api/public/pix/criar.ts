@@ -42,6 +42,31 @@ export const Route = createFileRoute("/api/public/pix/criar")({
 
         const customerEmail = b.email && b.email.includes("@") ? b.email : CHECKOUT_EMAIL;
 
+        // Idempotency: return existing PENDING pix if created within the last 15 minutes
+        const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        const { data: existingPix } = await supabaseAdmin
+          .from("desenrola_pix_transactions")
+          .select("*")
+          .eq("cpf", b.cpf)
+          .eq("acordo", b.acordo)
+          .eq("status", "PENDING")
+          .gte("created_at", fifteenMinsAgo)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingPix && existingPix.qr_code) {
+          return json({
+            success: true,
+            gateway: existingPix.gateway,
+            transactionId: existingPix.transaction_id,
+            copyPaste: existingPix.qr_code,
+            qrCodeUrl: existingPix.qr_code_url,
+            expiresAt: existingPix.expires_at,
+            status: existingPix.status,
+          }, 200);
+        }
+
         const result = await createPix(gateway, {
           cpf: b.cpf,
           nome: customerName,

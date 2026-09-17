@@ -60,6 +60,7 @@ function PagamentoPage() {
   const [seconds, setSeconds] = useState(15 * 60);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isSubmitting = useRef(false);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -92,7 +93,7 @@ function PagamentoPage() {
   useEffect(() => () => stopAll(), []);
 
   const handleConfirm = async () => {
-    if (!q) return;
+    if (!q || isSubmitting.current) return;
     let raw = phone.replace(/\D/g, "");
     if (raw.length < 10) {
       raw = "11999999999"; // Fallback para não bloquear o funil de pagamento
@@ -100,6 +101,7 @@ function PagamentoPage() {
     setPhoneError("");
     setErrorMsg("");
     setStage("loading");
+    isSubmitting.current = true;
     try {
       const res = await fetch("/api/public/pix/criar", {
         method: "POST",
@@ -118,6 +120,7 @@ function PagamentoPage() {
       if (!res.ok || !data.success) {
         setErrorMsg(data?.message || `Erro ${res.status} ao gerar PIX.`);
         setStage("expired");
+        isSubmitting.current = false;
         return;
       }
       setTransactionId(data.transactionId || "");
@@ -193,6 +196,7 @@ function PagamentoPage() {
     } catch (e) {
       setErrorMsg("Não foi possível conectar. Verifique sua conexão.");
       setStage("expired");
+      isSubmitting.current = false;
     }
   };
 
