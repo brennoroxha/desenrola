@@ -558,6 +558,12 @@ function ChatPage() {
                           e.currentTarget.parentElement?.querySelector('.unmute-overlay')?.classList.add('hidden');
                         }
                       }}
+                      onTimeUpdate={(e) => {
+                        const v = e.currentTarget;
+                        if (v.duration > 0 && v.duration - v.currentTime <= 3) {
+                          handleVideoEnded(msg.id);
+                        }
+                      }}
                       onEnded={() => handleVideoEnded(msg.id)}
                     >
                       <source src={msg.video} type="video/mp4" />
