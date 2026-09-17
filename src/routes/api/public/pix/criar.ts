@@ -89,8 +89,9 @@ export const Route = createFileRoute("/api/public/pix/criar")({
                 },
                 { onConflict: "transaction_id" },
               );
-            pushcut("gerado", (b.amount_cents / 100).toFixed(2)).catch(() => {});
+            const pushPromise = pushcut("gerado", (b.amount_cents / 100).toFixed(2)).catch(() => {});
             const dbRes = await dbPromise;
+            await pushPromise;
             if (dbRes?.error) console.error("[pix/criar] supabase upsert error", dbRes.error);
           } catch (err) {
             console.error("[pix/criar] side effects failed", err);
