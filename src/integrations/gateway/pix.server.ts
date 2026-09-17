@@ -694,7 +694,7 @@ export function parseWebhookPayload(payload: any, sourceHeader: string | null): 
     };
   }
 
-  const isBlackcat = src.includes("blackcat") || typeof payload.event === "string" || typeof payload.transactionId === "string";
+  const isBlackcat = src.includes("blackcat") || typeof payload.transactionId === "string" || typeof payload.saleId === "string" || (typeof payload.event === "string" && String(payload.event).startsWith("sale."));
   if (isBlackcat) {
     return {
       id: String(payload.transactionId ?? payload.id ?? "") || null,
