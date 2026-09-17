@@ -75,6 +75,7 @@ export const Route = createFileRoute("/api/public/pix/webhook/invictus")({
                 .or("notified_aprovado.is.null,notified_aprovado.eq.false")
                 .select("amount_cents");
               
+              if (claimed && claimed.length > 0) {
                 const { pushcut } = await import("@/integrations/pushcut/notify.server");
                 const cents = claimed[0].amount_cents;
                 await pushcut("aprovado", cents ? (cents / 100).toFixed(2) : null).catch(() => {});
