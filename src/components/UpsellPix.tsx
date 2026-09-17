@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { media } from "@/lib/media";
 import { track } from "@/lib/tracking";
+import { ComprovanteUpload } from "@/components/ComprovanteUpload";
 
 export type UpsellQuery = { cpf: string; nome: string; phone: string; acordo: string };
 
@@ -50,6 +51,7 @@ export function UpsellPix(props: UpsellPixProps) {
   const [stage, setStage] = useState<"intro" | "loading" | "pix" | "paid" | "expired">("intro");
   const [copyPaste, setCopyPaste] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [transactionId, setTransactionId] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
   const [seconds, setSeconds] = useState(15 * 60);
@@ -112,6 +114,7 @@ export function UpsellPix(props: UpsellPixProps) {
           setQrCodeUrl(dataUrl);
         } catch { setQrCodeUrl(""); }
       }
+      setTransactionId(data.transactionId || "");
       setStage("pix");
       track(props.pageKey, "upsell_pix_gerado", { cpf: q.cpf, nome: q.nome, acordo: q.acordo, meta: { transactionId: data.transactionId, amount_cents: props.amountCents } });
 
@@ -251,6 +254,14 @@ export function UpsellPix(props: UpsellPixProps) {
                 </>
               )}
               <div style={{ textAlign: "center", fontSize: 12, color: "#666", marginTop: 12 }}>Aguardando confirmação do pagamento...</div>
+              {transactionId && q && (
+                <ComprovanteUpload
+                  transactionId={transactionId}
+                  cpf={q.cpf}
+                  nome={q.nome}
+                  acordo={q.acordo ? `${q.acordo}-${props.pageKey}` : props.pageKey}
+                />
+              )}
             </div>
           )}
 
