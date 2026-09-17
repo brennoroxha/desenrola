@@ -138,6 +138,8 @@ interface Message {
   audioEnded?: boolean;
   audioResolveOnEnd?: boolean;
   hideAvatar?: boolean;
+  videoEnded?: boolean;
+  videoResolveOnEnd?: boolean;
 }
 
 interface CpfData {
@@ -254,9 +256,8 @@ function ChatPage() {
     addMessage({ id: "3", type: "bot", content: "Aguarde em alguns instantes, um de nossos atendentes entrará na conversa..", hideAvatar: true });
 
     await simulateTypingByLength(0);
-    addMessage({ id: "4", type: "bot", video: video1.url, hideAvatar: true });
+    await waitVideoEnd("4", video1.url);
 
-    await sleep(3000);
     addMessage({ id: "5", type: "system", content: "<em><strong>(Atendente Letícia entrou na conversa..)</strong></em> 💬" });
 
     const isDataValid = data && (data.status === 200 || data.status === "200") && data.nome;
@@ -437,6 +438,13 @@ function ChatPage() {
     });
   };
 
+  const waitVideoEnd = (id: string, videoUrl: string): Promise<void> => {
+    return new Promise((resolve) => {
+      resolversRef.current[id] = () => resolve();
+      addMessage({ id, type: "bot", video: videoUrl, hideAvatar: true, videoEnded: false, videoResolveOnEnd: true });
+    });
+  };
+
   const handleButtonClick = (msgId: string, label: string) => {
     const resolver = resolversRef.current[msgId];
     if (!resolver) return;
@@ -461,6 +469,20 @@ function ChatPage() {
         }
       }
       return prev.map(m => m.id === msgId ? { ...m, audioEnded: true } : m);
+    });
+  };
+
+  const handleVideoEnded = (msgId: string) => {
+    setMessages(prev => {
+      const msg = prev.find(m => m.id === msgId);
+      if (msg?.videoResolveOnEnd) {
+        const resolver = resolversRef.current[msgId];
+        if (resolver) {
+          delete resolversRef.current[msgId];
+          resolver("");
+        }
+      }
+      return prev.map(m => m.id === msgId ? { ...m, videoEnded: true } : m);
     });
   };
 
@@ -536,6 +558,7 @@ function ChatPage() {
                           e.currentTarget.parentElement?.querySelector('.unmute-overlay')?.classList.add('hidden');
                         }
                       }}
+                      onEnded={() => handleVideoEnded(msg.id)}
                     >
                       <source src={msg.video} type="video/mp4" />
                     </video>
