@@ -165,9 +165,18 @@ export function UpsellPix(props: UpsellPixProps) {
     if (!copyPaste) return;
     try {
       await navigator.clipboard.writeText(copyPaste);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = copyPaste;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch {}
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (

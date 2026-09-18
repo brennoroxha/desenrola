@@ -194,11 +194,21 @@ function CheckoutPage() {
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(copyPaste);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     } catch {
-      setErro("Não foi possível copiar. Selecione o código manualmente.");
+      const ta = document.createElement("textarea");
+      ta.value = copyPaste;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch {
+        setErro("Não foi possível copiar. Selecione o código manualmente.");
+        return;
+      }
+      ta.remove();
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
